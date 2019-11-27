@@ -11,11 +11,11 @@ Parameters:
 
   CodeDeployDeploymentApplicationName:
     Type: String
-    Default: 'My-CodeDeployDeployment-ApplicationName'
+    Default: 'DemoApplication'
     Description: The Code Deploy Application Name
   CodeDeployDeploymentGroupName:
     Type: String
-    Default: 'My-CodeDeployDeployment-GroupName'
+    Default: 'DemoFleet'
     Description: The Code Deploy Deployment Group Name
   CodeDeployEnableAutoRollbackConfiguration:
       Description: The Code Deploy AutoRollback Configuration.

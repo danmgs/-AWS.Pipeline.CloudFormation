@@ -20,7 +20,7 @@ Parameters:
     Type: String
     Default: DemoApplication
   BetaFleet:
-    Description: Fleet configured in CodeDeploy
+    Description: Fleet configured in CodeDeploy (Group Name)
     Type: String
     Default: DemoFleet
 Resources:
@@ -37,9 +37,9 @@ Resources:
             Effect: Deny
             Principal: '*'
             Action: 's3:PutObject'
-            Resource: !Join 
+            Resource: !Join
               - ''
-              - - !GetAtt 
+              - - !GetAtt
                   - CodePipelineArtifactStoreBucket
                   - Arn
                 - /*
@@ -50,9 +50,9 @@ Resources:
             Effect: Deny
             Principal: '*'
             Action: 's3:*'
-            Resource: !Join 
+            Resource: !Join
               - ''
-              - - !GetAtt 
+              - - !GetAtt
                   - CodePipelineArtifactStoreBucket
                   - Arn
                 - /*
@@ -71,7 +71,7 @@ Resources:
       TargetPipeline: !Ref AppPipeline
       TargetAction: SourceAction
       Name: AppPipelineWebhook
-      TargetPipelineVersion: !GetAtt 
+      TargetPipelineVersion: !GetAtt
         - AppPipeline
         - Version
       RegisterWithThirdParty: true
@@ -79,7 +79,7 @@ Resources:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
       Name: github-events-pipeline
-      RoleArn: !GetAtt 
+      RoleArn: !GetAtt
         - CodePipelineServiceRole
         - Arn
       Stages:

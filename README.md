@@ -9,7 +9,7 @@ A project to demo AWS CodeDeploy.
 ```
 aws s3 mb s3://YOUR_BUCKET_NAME
 
-aws cloudformation package --template-file parent-setup.cfn.yml --output-template packaged-s3-parent-setup.yaml --s3-bucket YOUR_BUCKET_NAME
+aws cloudformation package --template-file parent-codedeploy-ec2-setup.cfn.yml --output-template packaged-s3-parent-codedeploy-ec2-setup.cfn.yaml --s3-bucket YOUR_BUCKET_NAME
 ```
 
 ```
