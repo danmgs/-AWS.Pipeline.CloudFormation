@@ -1,0 +1,124 @@
+################################################################################
+#
+# Cloud formation child template
+# Author: NGUYEN Daniel
+# - Creation of a CodeDeploy setup in AWS.
+#
+################################################################################
+
+
+Parameters:
+
+  CodeDeployDeploymentApplicationName:
+    Type: String
+    Default: 'My-CodeDeployDeployment-ApplicationName'
+    Description: The Code Deploy Application Name
+  CodeDeployDeploymentGroupName:
+    Type: String
+    Default: 'My-CodeDeployDeployment-GroupName'
+    Description: The Code Deploy Deployment Group Name
+  CodeDeployEnableAutoRollbackConfiguration:
+      Description: The Code Deploy AutoRollback Configuration.
+      Default: false
+      Type: String
+      AllowedValues: [true, false]
+  EC2TagKey0:
+    Type: String
+    Default: ec2TagKey0
+    Description: The Code Deploy Tag for deployment to EC2
+  EC2TagValue0:
+    Type: String
+    Default: ec2TagValue0
+    Description: The Code Deploy Tag Value for deployment to EC2
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "CodeDeploy Configuration"
+        Parameters:
+          - CodeDeployDeploymentApplicationName
+          - CodeDeployDeploymentGroupName
+          - CodeDeployEnableAutoRollbackConfiguration
+          - EC2TagKey0
+          - EC2TagValue0
+
+Resources:
+
+  CodeDeployApplication:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: !Ref CodeDeployDeploymentApplicationName
+      ComputePlatform: Server
+
+  CodeDeployDeploymentConfig:
+    Type: AWS::CodeDeploy::DeploymentConfig
+    Properties:
+      MinimumHealthyHosts:
+        Type: FLEET_PERCENT
+        Value: '0'
+
+  CodeDeployServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-CodeDeployServiceRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - codedeploy.amazonaws.com
+          Action:
+          - sts:AssumeRole
+
+  CodeDeployDeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      ApplicationName: !Ref CodeDeployDeploymentApplicationName
+      AutoRollbackConfiguration:
+        Enabled: !Ref CodeDeployEnableAutoRollbackConfiguration
+        Events:
+          - DEPLOYMENT_FAILURE
+      DeploymentConfigName: !Ref CodeDeployDeploymentConfig
+      DeploymentGroupName: !Ref CodeDeployDeploymentGroupName
+      DeploymentStyle:
+        DeploymentType: IN_PLACE
+        DeploymentOption: WITHOUT_TRAFFIC_CONTROL
+      Ec2TagFilters:
+        - Key: !Ref EC2TagKey0
+          Value: !Ref EC2TagValue0
+          Type: KEY_AND_VALUE
+      ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
+
+
+Outputs:
+
+  OutputCodeDeployStackName:
+    Description: CodeDeploy Stack Name
+    Value: !Ref AWS::StackName
+    Export:
+      Name: !Sub ${AWS::StackName}-CodeDeployStack
+
+  OutputCodeDeployApplication:
+    Description: The CodeDeploy Application
+    Value: !Ref CodeDeployApplication
+    Export:
+      Name: !Sub ${AWS::StackName}-CodeDeployApplication
+
+  OutputCodeDeployDeploymentApplicationName:
+    Description: The CodeDeploy Application Name
+    Value: !Ref CodeDeployDeploymentApplicationName
+    Export:
+      Name: !Sub ${AWS::StackName}-CodeDeployDeploymentApplicationName
+
+  OutputCodeDeployDeploymentGroup:
+    Description: The CodeDeploy Deployment Group
+    Value: !Ref CodeDeployDeploymentGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-CodeDeployDeploymentGroup
