@@ -2,14 +2,15 @@
 #
 # Cloud formation child template
 # Author: NGUYEN Daniel
-# - Creation of a CodeDeploy setup in AWS.
+#
+# - Creation of a CodeDeploy Configuration in AWS.
 #
 ################################################################################
 
 
 Parameters:
 
-  CodeDeployDeploymentApplicationName:
+  CodeDeployApplicationName:
     Type: String
     Default: 'DemoApplication'
     Description: The Code Deploy Application Name
@@ -39,7 +40,7 @@ Metadata:
         Label:
           default: "CodeDeploy Configuration"
         Parameters:
-          - CodeDeployDeploymentApplicationName
+          - CodeDeployApplicationName
           - CodeDeployDeploymentGroupName
           - CodeDeployEnableAutoRollbackConfiguration
           - EC2TagKey0
@@ -50,7 +51,7 @@ Resources:
   CodeDeployApplication:
     Type: AWS::CodeDeploy::Application
     Properties:
-      ApplicationName: !Ref CodeDeployDeploymentApplicationName
+      ApplicationName: !Ref CodeDeployApplicationName
       ComputePlatform: Server
 
   CodeDeployDeploymentConfig:
@@ -80,7 +81,7 @@ Resources:
   CodeDeployDeploymentGroup:
     Type: AWS::CodeDeploy::DeploymentGroup
     Properties:
-      ApplicationName: !Ref CodeDeployDeploymentApplicationName
+      ApplicationName: !Ref CodeDeployApplicationName
       AutoRollbackConfiguration:
         Enabled: !Ref CodeDeployEnableAutoRollbackConfiguration
         Events:
@@ -111,11 +112,11 @@ Outputs:
     Export:
       Name: !Sub ${AWS::StackName}-CodeDeployApplication
 
-  OutputCodeDeployDeploymentApplicationName:
+  OutputCodeDeployApplicationName:
     Description: The CodeDeploy Application Name
-    Value: !Ref CodeDeployDeploymentApplicationName
+    Value: !Ref CodeDeployApplicationName
     Export:
-      Name: !Sub ${AWS::StackName}-CodeDeployDeploymentApplicationName
+      Name: !Sub ${AWS::StackName}-CodeDeployApplicationName
 
   OutputCodeDeployDeploymentGroup:
     Description: The CodeDeploy Deployment Group

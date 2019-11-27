@@ -6,7 +6,7 @@ Parameters:
   RepositoryName:
     Description: GitHub repository name
     Type: String
-    Default: test
+    Default: "AWS.Pipeline.CloudFormation"
   GitHubOwner:
     Type: String
   GitHubSecret:
@@ -187,3 +187,11 @@ Resources:
                   - 'sqs:*'
                   - 'ecs:*'
                 Resource: '*'
+
+Outputs:
+
+  OutputCodePipelineStackName:
+    Description: CodePipeline Stack Name
+    Value: !Ref AWS::StackName
+    Export:
+      Name: !Sub ${AWS::StackName}-CodePipelineStack

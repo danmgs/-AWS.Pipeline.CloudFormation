@@ -2,7 +2,8 @@
 #
 # Cloud formation child template
 # Author: NGUYEN Daniel
-# - Creation of the EC2 Instance with setup of codedeploy agent.
+#
+# - Creation of the EC2 Instance with setup of CodeDeploy agent.
 #
 ################################################################################
 
@@ -70,7 +71,7 @@ Resources:
   SSHSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupDescription: !Sub HTTP and SSH Security group for ${AWS::StackName}
+      GroupDescription: !Sub SSH Security group for ${AWS::StackName}
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '80'
@@ -85,6 +86,20 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-SSHSecurityGroup"
+
+  WebSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: !Sub Web Security group for ${AWS::StackName}
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-WebSecurityGroup"
 
   EC2RoleInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -152,6 +167,7 @@ Resources:
       KeyName: !Ref 'KeyName'
       SecurityGroupIds:
         - !GetAtt SSHSecurityGroup.GroupId
+        - !GetAtt WebSecurityGroup.GroupId
       IamInstanceProfile: !Ref EC2RoleInstanceProfile
       UserData:
         "Fn::Base64":
@@ -167,6 +183,8 @@ Resources:
       Tags:
         - Key: !Ref EC2TagKey0
           Value: !Ref EC2TagValue0
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-EC2Instance"
 
 
 Outputs:
@@ -184,7 +202,13 @@ Outputs:
       Name: !Sub ${AWS::StackName}-EC2Instance
 
   OutputSSHSecurityGroup:
-    Description: The EC2 Default Security Group
+    Description: The EC2 SSH Security Group
     Value: !Ref SSHSecurityGroup
     Export:
       Name: !Sub ${AWS::StackName}-SSHSecurityGroup
+
+  OutputWebSecurityGroup:
+    Description: The EC2 Web Security Group
+    Value: !Ref WebSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-WebSecurityGroup

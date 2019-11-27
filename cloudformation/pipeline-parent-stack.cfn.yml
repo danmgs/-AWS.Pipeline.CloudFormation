@@ -2,8 +2,10 @@
 #
 # Cloud formation parent template
 # Author: NGUYEN Daniel
-# - Creation of the EC2 Instance with setup of codedeploy agent.
-# - Creation of a CodeDeploy setup in AWS.
+#
+# - Creation of the EC2 Instance with setup of CodeDeploy agent.
+# - Creation of a CodeDeploy Configuration in AWS.
+# - Creation of a CodePipeline Configuration in AWS.
 #
 ################################################################################
 
@@ -41,7 +43,7 @@ Parameters:
 
   # ec2Instance.cfn.yml parameters
 
-  CodeDeployDeploymentApplicationName:
+  CodeDeployApplicationName:
     Type: String
     Default: 'DemoApplication'
     Description: The Code Deploy Application Name
@@ -63,6 +65,28 @@ Parameters:
     Default: ec2TagValue0
     Description: The Tag Value for EC2 and CodeDeploy Deployment Group
 
+  # codepipeline-github-events.cfn.yml parameters
+
+  BranchName:
+    Description: GitHub branch name
+    Type: String
+    Default: master
+  RepositoryName:
+    Description: GitHub repository name
+    Type: String
+    Default: "AWS.Pipeline.CloudFormation"
+  GitHubOwner:
+    Type: String
+  GitHubSecret:
+    Description:  The GitHub secret you want to use for the webhook AWS CloudFormation creates
+    Type: String
+    NoEcho: true
+  GitHubOAuthToken:
+    Description:  The GitHub access token
+    Type: String
+    NoEcho: true
+
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -78,7 +102,7 @@ Metadata:
         Label:
           default: "CodeDeploy Configuration"
         Parameters:
-          - CodeDeployDeploymentApplicationName
+          - CodeDeployApplicationName
           - CodeDeployDeploymentGroupName
           - CodeDeployEnableAutoRollbackConfiguration
       -
@@ -87,6 +111,17 @@ Metadata:
         Parameters:
           - EC2TagKey0
           - EC2TagValue0
+      -
+        Label:
+          default: "CodePipeline Configuration"
+        Parameters:
+          - BranchName
+          - RepositoryName
+          - GitHubOwner
+          - GitHubSecret
+          - GitHubOAuthToken
+          - ApplicationName
+          - BetaFleet
 
 Resources:
 
@@ -101,19 +136,34 @@ Resources:
         KeyName: !Ref KeyName
         EC2TagKey0: !Ref EC2TagKey0
         EC2TagValue0: !Ref EC2TagValue0
-      # TimeoutInMinutes: 5
+      TimeoutInMinutes: 15
 
   CodeDeployStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: templates/codedeploy.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/456xxxxx.template
       Parameters:
-        CodeDeployDeploymentApplicationName: !Ref CodeDeployDeploymentApplicationName
+        CodeDeployApplicationName: !Ref CodeDeployApplicationName
         CodeDeployDeploymentGroupName: !Ref CodeDeployDeploymentGroupName
         CodeDeployEnableAutoRollbackConfiguration: !Ref CodeDeployEnableAutoRollbackConfiguration
         EC2TagKey0: !Ref EC2TagKey0
         EC2TagValue0: !Ref EC2TagValue0
-      # TimeoutInMinutes: 5
+      TimeoutInMinutes: 15
+
+  CodePipelineStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: templates/codepipeline-github-events.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/789xxxxx.template
+      Parameters:
+        BranchName: !Ref BranchName
+        RepositoryName: !Ref RepositoryName
+        GitHubOwner: !Ref GitHubOwner
+        GitHubSecret: !Ref GitHubSecret
+        GitHubOAuthToken: !Ref GitHubOAuthToken
+        ApplicationName: !Ref CodeDeployApplicationName
+        BetaFleet: !Ref CodeDeployDeploymentGroupName
+      TimeoutInMinutes: 15
+    DependsOn: [ EC2InstanceStack, CodeDeployStack ]
 
 
 Outputs:
@@ -123,3 +173,6 @@ Outputs:
 
   OutputCodeDeployStackName:
     Value: !GetAtt CodeDeployStack.Outputs.OutputCodeDeployStackName
+
+  OutputCodePipelineStackName:
+    Value: !GetAtt CodePipelineStack.Outputs.OutputCodePipelineStackName
