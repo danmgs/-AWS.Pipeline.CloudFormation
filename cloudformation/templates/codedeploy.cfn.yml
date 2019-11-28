@@ -3,7 +3,7 @@
 # Cloud formation child template
 # Author: NGUYEN Daniel
 #
-# - Creation of a CodeDeploy Configuration in AWS.
+# - Creation of a CodeDeploy Project Configuration in AWS.
 #
 ################################################################################
 
@@ -38,7 +38,7 @@ Metadata:
     ParameterGroups:
       -
         Label:
-          default: "CodeDeploy Configuration"
+          default: "CodeDeploy Project Configuration"
         Parameters:
           - CodeDeployApplicationName
           - CodeDeployDeploymentGroupName
@@ -113,7 +113,7 @@ Outputs:
       Name: !Sub ${AWS::StackName}-CodeDeployApplication
 
   OutputCodeDeployApplicationName:
-    Description: The CodeDeploy Application Name
+    Description: The Application Name
     Value: !Ref CodeDeployApplicationName
     Export:
       Name: !Sub ${AWS::StackName}-CodeDeployApplicationName

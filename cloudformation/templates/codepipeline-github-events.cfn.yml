@@ -16,10 +16,10 @@ Parameters:
     Type: String
     NoEcho: true
   ApplicationName:
-    Description: CodeDeploy application name
+    Description: The Application name
     Type: String
     Default: DemoApplication
-  BetaFleet:
+  DeploymentGroupeFleet:
     Description: Fleet configured in CodeDeploy (Group Name)
     Type: String
     Default: DemoFleet
@@ -78,11 +78,11 @@ Resources:
   AppPipeline:
     Type: 'AWS::CodePipeline::Pipeline'
     Properties:
-      Name: github-events-pipeline
+      Name: !Ref ApplicationName
       RoleArn: !GetAtt
         - CodePipelineServiceRole
         - Arn
-      Stages:
+      Stages: # https://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#pipeline-requirements
         - Name: Source
           Actions:
             - Name: SourceAction
@@ -100,11 +100,26 @@ Resources:
                 OAuthToken: !Ref GitHubOAuthToken
                 PollForSourceChanges: false
               RunOrder: 1
-        - Name: Beta
+        - Name: Build
           Actions:
-            - Name: BetaAction
+            - Name: BuildAction
               InputArtifacts:
                 - Name: SourceOutput
+              OutputArtifacts:
+                - Name: BuildOutput
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref ApplicationName
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
+              InputArtifacts:
+                - Name: BuildOutput
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
@@ -112,7 +127,7 @@ Resources:
                 Provider: CodeDeploy
               Configuration:
                 ApplicationName: !Ref ApplicationName
-                DeploymentGroupName: !Ref BetaFleet
+                DeploymentGroupName: !Ref DeploymentGroupeFleet
               RunOrder: 1
       ArtifactStore:
         Type: S3
@@ -186,6 +201,7 @@ Resources:
                   - 'rds:*'
                   - 'sqs:*'
                   - 'ecs:*'
+                  - 'ssm:*'
                 Resource: '*'
 
 Outputs:
