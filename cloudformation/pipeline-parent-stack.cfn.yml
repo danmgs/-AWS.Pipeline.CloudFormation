@@ -105,7 +105,7 @@ Parameters:
     - GITHUB        # The source code is in a GitHub repository.
     - S3            # The source code is in an Amazon Simple Storage Service (Amazon S3) input bucket.
   CodeBuildSourceLocation:
-    Description: The CodeBuild Source Location (Source control url, S3 url ...). Useless when CodeBuildSourceType=CODEPIPELINE.
+    Description: The CodeBuild Source Location (github repository url, S3 url ...). Useless when CodeBuildSourceType=CODEPIPELINE.
     Type: String
     Default: 'https://github.com/danmgs/AWS.Pipeline.CloudFormation'
   CodeBuildSpec:
@@ -113,14 +113,16 @@ Parameters:
     Type: String
     Default: ''
   CodeBuildOutputArtifactBucket:
-    Description: The CodeBuild Output Artifac S3 tBucket (useless when CodeBuildSourceType=CODEPIPELINE. This is because AWS CodePipeline manages its build output names instead of AWS CodeBuild.)
+    Description: The CodeBuild Output Artifac S3 tBucket (Useless when CodeBuildSourceType=CODEPIPELINE. This is because AWS CodePipeline manages its build output names instead of AWS CodeBuild.)
     Type: String
     Default: 'com.dnl.cloudformation'
   CodeBuildEnableLogsConfig:
       Description: Enable CloudWatch for the CodeBuild Project.
-      Default: true
+      Default: ENABLED
       Type: String
-      AllowedValues: [true, false]
+      AllowedValues:
+      - ENABLED
+      - DISABLED
 
   # codepipeline-github-events.cfn.yml parameters
 
