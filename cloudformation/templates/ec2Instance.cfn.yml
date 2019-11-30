@@ -64,7 +64,7 @@ Metadata:
 Mappings:
   AWSRegionArch2AMI:
     eu-west-3:
-      HVM64: ami-0ebc281c20e89ba4b
+      HVM64: ami-0e9e6ba6d3d38faa8
 
 Resources:
 
@@ -73,10 +73,6 @@ Resources:
     Properties:
       GroupDescription: !Sub SSH Security group for ${AWS::StackName}
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          CidrIp: 0.0.0.0/0
         - CidrIp: !Ref SSHFrom
           FromPort: 22
           ToPort: 22
