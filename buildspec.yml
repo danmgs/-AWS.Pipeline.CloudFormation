@@ -24,7 +24,8 @@ phases:
 # used only for building and testing.
 # ExpressJS apps will need other artifact directories included (bin/*, public/*, routes/*, views/* etc).
 artifacts:
+  base-directory: app
   files:
-    - app/src/index.html
-    - app/appspec.yml
-    - app/scripts/*
+    - src/index.html
+    - appspec.yml
+    - scripts/*
