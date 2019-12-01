@@ -12,7 +12,7 @@ These templates will:
 
 ## Prerequisites
 
-You should have aws cli installed and configured on your computer.
+You should have aws cli installed and configured with your AWS credentials on your computer.
 
 ## Folder Organization
 
@@ -82,10 +82,12 @@ Alternatively, you can use **packaged-s3-pipeline-parent-stack.cfn.yml** to uplo
 ## Build and deploy
 
 - **buildspec.yml** is used by CodeBuild.
-This file details how to build the application.
+
+This file details how to build the application and generate and a build artifact.
 
 
-- **appspec.yml** is used by CodeDeploy.
+- **appspec.yml** is used by CodeDeploy. It is placed in the root of the build artifact.
+
 This file details how to setup the application:
 
 > What to deploy  (regarding source files of the website) :
