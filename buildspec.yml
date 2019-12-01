@@ -10,6 +10,7 @@ phases:
       - dotnet --version
       - dotnet --list-sdks
       - dotnet --list-runtimes
+      - pwd
       - ls
   pre_build:
     commands:
@@ -24,8 +25,7 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-      - cd ./app/src
-      - ls
+      - cd ../..
 # Include only the files required for your application to run.
 # Do not use recursively include artifacts from node_modules directory as it will include unnecessary packages
 # used only for building and testing.
@@ -33,6 +33,6 @@ phases:
 artifacts:
   base-directory: app
   files:
-    - src/index.html
+    - output/**/*
     - appspec.yml
     - scripts/*
