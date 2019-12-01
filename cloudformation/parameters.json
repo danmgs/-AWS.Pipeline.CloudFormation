@@ -106,5 +106,5 @@
   {
     "ParameterKey": "GitHubOAuthToken",
     "ParameterValue": "YOUR_GITHUB_OAUTH_TOKEN"
-  },
+  }
 ]
