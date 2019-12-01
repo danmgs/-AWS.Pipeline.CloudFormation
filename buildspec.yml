@@ -12,6 +12,7 @@ phases:
       - dotnet --list-runtimes
       - pwd
       - ls
+      - docker version
   pre_build:
     commands:
       - echo Clean and restore dotnet project
@@ -26,6 +27,7 @@ phases:
     commands:
       - echo Build completed on `date`
       - cd ../..
+      - ls
 # Include only the files required for your application to run.
 # Do not use recursively include artifacts from node_modules directory as it will include unnecessary packages
 # used only for building and testing.
@@ -33,6 +35,6 @@ phases:
 artifacts:
   base-directory: app
   files:
-    - output/**/*
+    - output/*
     - appspec.yml
     - scripts/*
