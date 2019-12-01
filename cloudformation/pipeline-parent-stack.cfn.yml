@@ -3,7 +3,7 @@
 # Cloud formation parent template
 # Author: NGUYEN Daniel
 #
-# - Creation of the EC2 Instance with setup of CodeDeploy agent.
+# - Creation of an AutoScaling Group with an Application Load Balancer
 # - Creation of a CodeDeploy Project Configuration in AWS.
 # - Creation of a CodeBuild Project Configuration in AWS.
 # - Creation of a CodePipeline Configuration in AWS.
@@ -13,14 +13,35 @@
 
 Parameters:
 
-  # codedeploy.cfn.yml parameters
+  # Common Shared parameters
 
-  VPC:
-    Description: VPC to create the security group and EC2 instance into
-    Type: AWS::EC2::VPC::Id
-    AllowedPattern : "^(?:vpc-[0-9a-f]{8}|)$"
+  ApplicationName:
+    Description: The Application name
+    Type: String
+    MinLength: '1'
+    Default: 'DemoApplication'
+    ConstraintDescription: must be a valid name
+
+  EnvironmentName:
+    Type: String
+    Default: production
+    Description: "A friendly environment name that will be used for namespacing all cluster resources. Example: staging, qa, or production"
+
+  # vpc.network.cfn.yml specific parameters
+
+  AvailabilityZone1:
+    Description: The first availability zone in the region
+    Type: AWS::EC2::AvailabilityZone::Name
+    ConstraintDescription: Must be a valid availability zone
+  AvailabilityZone2:
+    Description: The second availability zone in the region
+    Type: AWS::EC2::AvailabilityZone::Name
+    ConstraintDescription: Must be a valid availability zone
+
+  # autoscalinggroup.alb.cfn.yml specific parameters
+
   InstanceType:
-    Description: EC2 instance type
+    Description: WebServer EC2 instance type
     Type: String
     Default: t2.micro
     AllowedValues: [t1.micro, t2.nano, t2.micro, t2.small, t2.medium, t2.large, m1.small,
@@ -31,42 +52,40 @@ Parameters:
       g2.8xlarge, r3.large, r3.xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge, i2.xlarge,
       i2.2xlarge, i2.4xlarge, i2.8xlarge, d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge,
       hi1.4xlarge, hs1.8xlarge, cr1.8xlarge, cc2.8xlarge, cg1.4xlarge]
-  SSHFrom:
-    Description: Limit SSH access to bastion hosts to a CIDR IP block
+    ConstraintDescription: must be a valid EC2 instance type.
+  OperatorEMail:
+    Description: EMail address to notify if there are any scaling operations
     Type: String
-    MinLength: 9
-    MaxLength: 18
-    Default: 0.0.0.0/0
+    Default: xxx@xxx.xxx
+    AllowedPattern: >-
+      ([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)
+    ConstraintDescription: must be a valid email address.
   KeyName:
-    Type: AWS::EC2::KeyPair::KeyName
-    Default: 'EC2 Tutorial'
-    Description: KeyName
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  DesiredCapacity:
+    Description: AutoScalingGroup DesiredCapacity
+    Type: String
+    Default: '2'
+  MinSize:
+    Description: AutoScalingGroup MinSize
+    Type: String
+    Default: '2'
+  MaxSize:
+    Description: AutoScalingGroup MaxSize
+    Type: String
+    Default: '3'
 
-  # ec2Instance.cfn.yml parameters
-
-  CodeDeployApplicationName:
-    Type: String
-    Default: 'DemoApplication'
-    Description: The Code Deploy Application Name
-  CodeDeployDeploymentGroupName:
-    Type: String
-    Default: 'DemoFleet'
-    Description: The Code Deploy Deployment Group Name
-  CodeDeployEnableAutoRollbackConfiguration:
-      Description: The Code Deploy AutoRollback Configuration.
-      Default: false
-      Type: String
-      AllowedValues: [true, false]
-  EC2TagKey0:
-    Type: String
-    Default: ec2TagKey0
-    Description: The Tag for EC2 and CodeDeploy Deployment Group
-  EC2TagValue0:
-    Type: String
-    Default: ec2TagValue0
-    Description: The Tag Value for EC2 and CodeDeploy Deployment Group
-
-  # codebuild.cfn.yml parameters
+  # codebuild.cfn.yml specific parameters
 
   CodeBuildImage:
     Description: The CodeBuild Image  # https://docs.amazonaws.cn/en_us/codebuild/latest/userguide/build-env-ref-available.html
@@ -124,7 +143,23 @@ Parameters:
       - ENABLED
       - DISABLED
 
-  # codepipeline-github-events.cfn.yml parameters
+  # codedeploy.cfn.yml specific parameters
+
+  CodeDeployDeploymentGroupName:
+    Type: String
+    Default: 'DemoFleet'
+    Description: The Code Deploy Deployment Group Name
+  CodeDeployDeploymentConfigMinimumHealthyHosts:
+    Type: Number
+    Default: '0'
+    Description: The Code Deploy Deployment Config MinimumHealthyHosts
+  CodeDeployEnableAutoRollbackConfiguration:
+      Description: The Code Deploy AutoRollback Configuration.
+      Default: false
+      Type: String
+      AllowedValues: [true, false]
+
+  # codepipeline-github-events.cfn.yml specific parameters
 
   BranchName:
     Description: GitHub branch name
@@ -137,94 +172,104 @@ Parameters:
   GitHubOwner:
     Type: String
   GitHubSecret:
-    Description:  The GitHub secret you want to use for the webhook AWS CloudFormation creates
     Type: String
     NoEcho: true
   GitHubOAuthToken:
-    Description:  The GitHub access token
     Type: String
     NoEcho: true
-
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       -
         Label:
-          default: "EC2 Configuration"
+          default: "Common Shared Configuration"
         Parameters:
-          - VPC
+          - ApplicationName
+          - EnvironmentName
+      -
+        Label:
+          default: "VPC Specific Configuration"
+        Parameters:
+          - AvailabilityZone1
+          - AvailabilityZone2
+      -
+        Label:
+          default: "AutoScalingGroup Specific Configuration"
+        Parameters:
           - InstanceType
-          - SSHFrom
+          - OperatorEMail
           - KeyName
+          - SSHLocation
+          - DesiredCapacity
+          - MinSize
+          - MaxSize
       -
         Label:
-          default: "CodeDeploy Project Configuration"
-        Parameters:
-          - CodeDeployApplicationName
-          - CodeDeployDeploymentGroupName
-          - CodeDeployEnableAutoRollbackConfiguration
-      -
-        Label:
-          default: "Group Deployment Configuration"
-        Parameters:
-          - EC2TagKey0
-          - EC2TagValue0
-      -
-        Label:
-          default: "CodeBuild Project Configuration"
+          default: "CodeBuild Project Specific Configuration"
         Parameters:
           - CodeBuildImage
           - CodeBuildComputeType
           - CodeBuildContainerType
+          - CodeBuildSourceType
           - CodeBuildSourceLocation
           - CodeBuildSpec
           - CodeBuildOutputArtifactBucket
           - CodeBuildEnableLogsConfig
       -
         Label:
-          default: "CodePipeline Configuration"
+          default: "CodeDeploy Project Specific Configuration"
+        Parameters:
+          - CodeDeployDeploymentGroupName
+          - CodeDeployDeploymentConfigMinimumHealthyHosts
+          - CodeDeployEnableAutoRollbackConfiguration
+      -
+        Label:
+          default: "CodePipeline Specific Configuration"
         Parameters:
           - BranchName
           - RepositoryName
           - GitHubOwner
           - GitHubSecret
           - GitHubOAuthToken
-          - ApplicationName
-          - DeploymentGroupeFleet
 
 Resources:
 
-  EC2InstanceStack:
+  VPCNetworkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/ec2Instance.cfn.yml # https://s3.YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/123xxxxx.template
+      TemplateURL: templates/vpc.network.cfn.yml # https://s3.YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/111xxxxx.template
       Parameters:
-        VPC: !Ref VPC
-        InstanceType: !Ref InstanceType
-        SSHFrom: !Ref SSHFrom
-        KeyName: !Ref KeyName
-        EC2TagKey0: !Ref EC2TagKey0
-        EC2TagValue0: !Ref EC2TagValue0
+        EnvironmentName: !Ref EnvironmentName
+        AvailabilityZone1: !Ref AvailabilityZone1
+        AvailabilityZone2: !Ref AvailabilityZone2
       TimeoutInMinutes: 15
 
-  CodeDeployStack:
+  AutoScalingGroupWithALBStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/codedeploy.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/456xxxxx.template
+      TemplateURL: templates/autoscalinggroup.alb.cfn.yml # https://s3.YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/222xxxxx.template
       Parameters:
-        CodeDeployApplicationName: !Ref CodeDeployApplicationName
-        CodeDeployDeploymentGroupName: !Ref CodeDeployDeploymentGroupName
-        CodeDeployEnableAutoRollbackConfiguration: !Ref CodeDeployEnableAutoRollbackConfiguration
-        EC2TagKey0: !Ref EC2TagKey0
-        EC2TagValue0: !Ref EC2TagValue0
+        EnvironmentName: !Ref EnvironmentName
+        InstanceType: !Ref InstanceType
+        VPC: !GetAtt VPCNetworkStack.Outputs.VPCId
+        PublicSubnet1: !GetAtt VPCNetworkStack.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt VPCNetworkStack.Outputs.PublicSubnet2
+        OperatorEMail: !Ref OperatorEMail
+        KeyName: !Ref KeyName
+        SSHLocation: !Ref SSHLocation
+        DesiredCapacity: !Ref DesiredCapacity
+        MinSize: !Ref MinSize
+        MaxSize: !Ref MaxSize
       TimeoutInMinutes: 15
+    DependsOn: [ VPCNetworkStack ]
 
   CodeBuildStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/codebuild.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/789xxxxx.template
+      TemplateURL: templates/codebuild.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/444xxxxx.template
       Parameters:
+        ApplicationName: !Ref ApplicationName
         CodeBuildImage: !Ref CodeBuildImage
         CodeBuildComputeType: !Ref CodeBuildComputeType
         CodeBuildContainerType: !Ref CodeBuildContainerType
@@ -233,36 +278,66 @@ Resources:
         CodeBuildSpec: !Ref CodeBuildSpec
         CodeBuildOutputArtifactBucket: !Ref CodeBuildOutputArtifactBucket
         CodeBuildEnableLogsConfig: !Ref CodeBuildEnableLogsConfig
-        ApplicationName: !Ref CodeDeployApplicationName
       TimeoutInMinutes: 15
-    DependsOn: [ EC2InstanceStack, CodeDeployStack ]
+    DependsOn: [ AutoScalingGroupWithALBStack ]
+
+  CodeDeployStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: templates/codedeploy.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/333xxxxx.template
+      Parameters:
+        EnvironmentName: !Ref EnvironmentName
+        CodeDeployApplicationName: !Ref ApplicationName
+        CodeDeployDeploymentGroupName: !Ref CodeDeployDeploymentGroupName
+        CodeDeployDeploymentConfigMinimumHealthyHosts: !Ref CodeDeployDeploymentConfigMinimumHealthyHosts
+        CodeDeployEnableAutoRollbackConfiguration: !Ref CodeDeployEnableAutoRollbackConfiguration
+        CodeDeployAutoScalingGroupName: !GetAtt AutoScalingGroupWithALBStack.Outputs.WebServerAutoScalingGroupName
+      TimeoutInMinutes: 15
+    DependsOn: [ AutoScalingGroupWithALBStack, CodeBuildStack ]
 
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/codepipeline-github-events.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/000xxxxx.template
+      TemplateURL: templates/codepipeline-github-events.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/555xxxxx.template
       Parameters:
         BranchName: !Ref BranchName
         RepositoryName: !Ref RepositoryName
         GitHubOwner: !Ref GitHubOwner
         GitHubSecret: !Ref GitHubSecret
         GitHubOAuthToken: !Ref GitHubOAuthToken
-        ApplicationName: !Ref CodeDeployApplicationName
-        DeploymentGroupeFleet: !Ref CodeDeployDeploymentGroupName
+        ApplicationName: !GetAtt CodeDeployStack.Outputs.CodeDeployApplicationName
+        DeploymentGroupName: !GetAtt CodeDeployStack.Outputs.CodeDeployDeploymentGroupName
       TimeoutInMinutes: 15
-    DependsOn: [ EC2InstanceStack, CodeDeployStack, CodeBuildStack ]
-
+    DependsOn: [ CodeDeployStack, CodeBuildStack ]
 
 Outputs:
 
-  OutputEC2InstanceStackName:
-    Value: !GetAtt EC2InstanceStack.Outputs.OutputEC2InstanceStackName
+  VPC:
+    Value: !GetAtt VPCNetworkStack.Outputs.VPCId
 
-  OutputCodeDeployStackName:
-    Value: !GetAtt CodeDeployStack.Outputs.OutputCodeDeployStackName
+  PublicSubnet1:
+    Value: !GetAtt VPCNetworkStack.Outputs.PublicSubnet1
 
-  OutputCodeBuildStackName:
-    Value: !GetAtt CodeBuildStack.Outputs.OutputCodeBuildStackName
+  PublicSubnet2:
+    Value: !GetAtt VPCNetworkStack.Outputs.PublicSubnet2
 
-  OutputCodePipelineStackName:
-    Value: !GetAtt CodePipelineStack.Outputs.OutputCodePipelineStackName
+  ExternalUrl:
+    Value: !GetAtt AutoScalingGroupWithALBStack.Outputs.ExternalUrl
+
+  WebServerAutoScalingGroupName:
+    Value: !GetAtt AutoScalingGroupWithALBStack.Outputs.WebServerAutoScalingGroupName
+
+  VPCNetworkStackName:
+    Value: !Ref VPCNetworkStack
+
+  AutoScalingGroupWithALBStackName:
+    Value: !Ref AutoScalingGroupWithALBStack
+
+  CodeBuildStackName:
+    Value: !Ref CodeBuildStack
+
+  CodeDeployStackName:
+    Value: !Ref CodeDeployStack
+
+  CodePipelineStackName:
+    Value: !Ref CodePipelineStack

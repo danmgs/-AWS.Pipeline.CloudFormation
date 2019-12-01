@@ -7,6 +7,9 @@
 #
 ################################################################################
 
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creation of a CodeBuild Project Configuration in AWS.
 
 Parameters:
 
@@ -68,7 +71,8 @@ Parameters:
   ApplicationName:
     Description: The Application name
     Type: String
-    Default: DemoApplication
+    Default: 'DemoApplication'
+    ConstraintDescription: must be a valid name
 
 Conditions:
   IsTypeCodePipeline: !Not [!Equals [ !Ref CodeBuildSourceType, CODEPIPELINE ]] # when using CodePipeline both sourceType, and artifactType must be set to: CODEPIPELINE
@@ -78,7 +82,7 @@ Resources:
   CodeBuildServiceRole:
     Type: 'AWS::IAM::Role'
     Properties:
-      RoleName: !Sub "${AWS::StackName}-CodeBuildServiceRole"
+      # RoleName: !Sub "${AWS::StackName}-CodeBuildServiceRole" # runs into errors if too long > 64 chars. let AWS generate the role
       Path: /
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
@@ -152,22 +156,19 @@ Resources:
           Status: !Ref CodeBuildEnableLogsConfig
       ServiceRole: !Ref CodeBuildServiceRole
 
-
 Outputs:
 
-  OutputCodeBuildStackName:
-    Description: CodeBuild Stack Name
-    Value: !Ref AWS::StackName
-    Export:
-      Name: !Sub ${AWS::StackName}-CodeBuildStack
+  ApplicationName:
+    Description: The Application Name
+    Value: !Ref ApplicationName
 
-  OutputCodeBuildProject:
+  CodeBuildProject:
     Description: The CodeBuild Project
     Value: !Ref CodeBuildProject
     Export:
       Name: !Sub ${AWS::StackName}-CodeBuildProject
 
-  OutputCodeBuildProjectArn:
+  CodeBuildProjectArn:
     Description: The CodeBuild Project Arn
     Value: !GetAtt CodeBuildProject.Arn
     Export:

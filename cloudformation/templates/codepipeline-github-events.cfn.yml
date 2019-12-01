@@ -18,9 +18,10 @@ Parameters:
   ApplicationName:
     Description: The Application name
     Type: String
-    Default: DemoApplication
-  DeploymentGroupeFleet:
-    Description: Fleet configured in CodeDeploy (Group Name)
+    Default: 'DemoApplication'
+    ConstraintDescription: must be a valid name
+  DeploymentGroupName:
+    Description: The Deployment Group Name
     Type: String
     Default: DemoFleet
 Resources:
@@ -127,7 +128,7 @@ Resources:
                 Provider: CodeDeploy
               Configuration:
                 ApplicationName: !Ref ApplicationName
-                DeploymentGroupName: !Ref DeploymentGroupeFleet
+                DeploymentGroupName: !Ref DeploymentGroupName
               RunOrder: 1
       ArtifactStore:
         Type: S3
@@ -203,11 +204,3 @@ Resources:
                   - 'ecs:*'
                   - 'ssm:*'
                 Resource: '*'
-
-Outputs:
-
-  OutputCodePipelineStackName:
-    Description: CodePipeline Stack Name
-    Value: !Ref AWS::StackName
-    Export:
-      Name: !Sub ${AWS::StackName}-CodePipelineStack

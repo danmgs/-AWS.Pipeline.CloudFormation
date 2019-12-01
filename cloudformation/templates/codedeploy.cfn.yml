@@ -5,11 +5,22 @@
 #
 # - Creation of a CodeDeploy Project Configuration in AWS.
 #
+# Prerequisite(s):
+# vpc.network.cfn.yml
+# autoscalinggroup.alb.cfn.yml
+#
 ################################################################################
 
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creation of a CodeDeploy Project Configuration in AWS.
 
 Parameters:
 
+  EnvironmentName:
+    Type: String
+    Default: production
+    Description: "A friendly environment name that will be used for namespacing all cluster resources. Example: staging, qa, or production"
   CodeDeployApplicationName:
     Type: String
     Default: 'DemoApplication'
@@ -18,33 +29,48 @@ Parameters:
     Type: String
     Default: 'DemoFleet'
     Description: The Code Deploy Deployment Group Name
+  CodeDeployDeploymentConfigMinimumHealthyHosts:
+    Type: Number
+    Default: '0'
+    Description: The Code Deploy Deployment Config MinimumHealthyHosts
   CodeDeployEnableAutoRollbackConfiguration:
       Description: The Code Deploy AutoRollback Configuration.
       Default: false
       Type: String
       AllowedValues: [true, false]
-  EC2TagKey0:
-    Type: String
-    Default: ec2TagKey0
-    Description: The Code Deploy Tag for deployment to EC2
-  EC2TagValue0:
-    Type: String
-    Default: ec2TagValue0
-    Description: The Code Deploy Tag Value for deployment to EC2
+  CodeDeployAutoScalingGroupName:
+      Description: The Code Deploy AutoScaling Group Name
+      Type: String
+      Default: ''
+      ConstraintDescription: must be a valid AutoScaling Group Name
+  # EC2TagKey0:
+  #   Type: String
+  #   Default: ec2TagKey0
+  #   Description: The Code Deploy Tag for deployment to EC2
+  # EC2TagValue0:
+  #   Type: String
+  #   Default: ec2TagValue0
+  #   Description: The Code Deploy Tag Value for deployment to EC2
 
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
+      - Label:
+          default: Environment Configuration
+        Parameters:
+          - EnvironmentName
       -
         Label:
           default: "CodeDeploy Project Configuration"
         Parameters:
           - CodeDeployApplicationName
           - CodeDeployDeploymentGroupName
+          - CodeDeployDeploymentConfigMinimumHealthyHosts
           - CodeDeployEnableAutoRollbackConfiguration
-          - EC2TagKey0
-          - EC2TagValue0
+          - CodeDeployAutoScalingGroupName
+          # - EC2TagKey0
+          # - EC2TagValue0
 
 Resources:
 
@@ -59,12 +85,12 @@ Resources:
     Properties:
       MinimumHealthyHosts:
         Type: FLEET_PERCENT
-        Value: '0'
+        Value: !Ref CodeDeployDeploymentConfigMinimumHealthyHosts
 
   CodeDeployServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${AWS::StackName}-CodeDeployServiceRole"
+      # RoleName: !Sub "${AWS::StackName}-CodeDeployServiceRole" # runs into errors if too long > 64 chars. let AWS generate the role
       Path: "/"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
@@ -91,35 +117,28 @@ Resources:
       DeploymentStyle:
         DeploymentType: IN_PLACE
         DeploymentOption: WITHOUT_TRAFFIC_CONTROL
-      Ec2TagFilters:
-        - Key: !Ref EC2TagKey0
-          Value: !Ref EC2TagValue0
-          Type: KEY_AND_VALUE
+      # Ec2TagFilters:
+      #   - Key: !Ref EC2TagKey0
+      #     Value: !Ref EC2TagValue0
+      #     Type: KEY_AND_VALUE
       ServiceRoleArn: !GetAtt CodeDeployServiceRole.Arn
-
+      AutoScalingGroups:
+        - !Ref CodeDeployAutoScalingGroupName
 
 Outputs:
 
-  OutputCodeDeployStackName:
-    Description: CodeDeploy Stack Name
-    Value: !Ref AWS::StackName
-    Export:
-      Name: !Sub ${AWS::StackName}-CodeDeployStack
+  CodeDeployApplicationName:
+    Description: The Application Name
+    Value: !Ref CodeDeployApplicationName
 
-  OutputCodeDeployApplication:
+  CodeDeployApplication:
     Description: The CodeDeploy Application
     Value: !Ref CodeDeployApplication
     Export:
       Name: !Sub ${AWS::StackName}-CodeDeployApplication
 
-  OutputCodeDeployApplicationName:
-    Description: The Application Name
-    Value: !Ref CodeDeployApplicationName
-    Export:
-      Name: !Sub ${AWS::StackName}-CodeDeployApplicationName
-
-  OutputCodeDeployDeploymentGroup:
+  CodeDeployDeploymentGroupName:
     Description: The CodeDeploy Deployment Group
-    Value: !Ref CodeDeployDeploymentGroup
+    Value: !Ref CodeDeployDeploymentGroupName
     Export:
-      Name: !Sub ${AWS::StackName}-CodeDeployDeploymentGroup
+      Name: !Sub ${AWS::StackName}-CodeDeployDeploymentGroupName

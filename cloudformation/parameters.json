@@ -76,6 +76,18 @@
     "ParameterValue": "ENABLED"
   },
   {
+    "ParameterKey": "CodeDeployDeploymentGroupName",
+    "ParameterValue": "DemoFleet"
+  },
+  {
+    "ParameterKey": "CodeDeployDeploymentConfigMinimumHealthyHosts",
+    "ParameterValue": "0"
+  },
+  {
+    "ParameterKey": "CodeDeployEnableAutoRollbackConfiguration",
+    "ParameterValue": "false"
+  },
+  {
     "ParameterKey": "BranchName",
     "ParameterValue": "master"
   },
@@ -95,16 +107,4 @@
     "ParameterKey": "GitHubOAuthToken",
     "ParameterValue": "YOUR_GITHUB_OAUTH_TOKEN"
   },
-  {
-    "ParameterKey": "CodeDeployDeploymentGroupName",
-    "ParameterValue": "DemoFleet"
-  },
-  {
-    "ParameterKey": "CodeDeployDeploymentConfigMinimumHealthyHosts",
-    "ParameterValue": "0"
-  },
-  {
-    "ParameterKey": "CodeDeployEnableAutoRollbackConfiguration",
-    "ParameterValue": "false"
-  }
 ]
