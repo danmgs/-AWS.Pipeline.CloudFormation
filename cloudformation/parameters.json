@@ -1,0 +1,110 @@
+[
+  {
+    "ParameterKey": "ApplicationName",
+    "ParameterValue": "DemoApplication"
+  },
+  {
+    "ParameterKey": "EnvironmentName",
+    "ParameterValue": "production"
+  },
+  {
+    "ParameterKey": "AvailabilityZone1",
+    "ParameterValue": "YOUR_AZ_1"
+  },
+  {
+    "ParameterKey": "AvailabilityZone2",
+    "ParameterValue": "YOUR_AZ_2"
+  },
+  {
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t2.micro"
+  },
+  {
+    "ParameterKey": "OperatorEMail",
+    "ParameterValue": "YOUR_OPERATOR_EMAIL"
+  },
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "EC2 Tutorial"
+  },
+  {
+    "ParameterKey": "SSHLocation",
+    "ParameterValue": "0.0.0.0/0"
+  },
+  {
+    "ParameterKey": "DesiredCapacity",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "MinSize",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "MaxSize",
+    "ParameterValue": "3"
+  },
+  {
+    "ParameterKey": "CodeBuildImage",
+    "ParameterValue": "aws/codebuild/standard:2.0"
+  },
+  {
+    "ParameterKey": "CodeBuildComputeType",
+    "ParameterValue": "BUILD_GENERAL1_SMALL"
+  },
+  {
+    "ParameterKey": "CodeBuildContainerType",
+    "ParameterValue": "LINUX_CONTAINER"
+  },
+  {
+    "ParameterKey": "CodeBuildSourceType",
+    "ParameterValue": "CODEPIPELINE"
+  },
+  {
+    "ParameterKey": "CodeBuildSourceLocation",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "CodeBuildSpec",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "CodeBuildOutputArtifactBucket",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "CodeBuildEnableLogsConfig",
+    "ParameterValue": "ENABLED"
+  },
+  {
+    "ParameterKey": "BranchName",
+    "ParameterValue": "master"
+  },
+  {
+    "ParameterKey": "RepositoryName",
+    "ParameterValue": "AWS.Pipeline.CloudFormation"
+  },
+  {
+    "ParameterKey": "GitHubOwner",
+    "ParameterValue": "YOUR_GITHUB_ACCOUNT"
+  },
+  {
+    "ParameterKey": "GitHubSecret",
+    "ParameterValue": "YOUR_GITHUB_SECRET"
+  },
+  {
+    "ParameterKey": "GitHubOAuthToken",
+    "ParameterValue": "YOUR_GITHUB_OAUTH_TOKEN"
+  },
+  {
+    "ParameterKey": "CodeDeployDeploymentGroupName",
+    "ParameterValue": "DemoFleet"
+  },
+  {
+    "ParameterKey": "CodeDeployDeploymentConfigMinimumHealthyHosts",
+    "ParameterValue": "0"
+  },
+  {
+    "ParameterKey": "CodeDeployEnableAutoRollbackConfiguration",
+    "ParameterValue": "false"
+  }
+]
