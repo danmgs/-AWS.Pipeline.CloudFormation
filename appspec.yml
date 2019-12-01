@@ -15,7 +15,7 @@ hooks:
       timeout: 300
       runas: root
   AfterInstall:
-    - location: Scripts/afterInstall
+    - location: scripts/afterInstall
       timeout: 180
       runas: root
   ApplicationStop:
