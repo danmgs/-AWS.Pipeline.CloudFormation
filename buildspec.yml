@@ -4,18 +4,22 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 10
+      dotnet: 2.1
     commands:
-      - echo Installing Some stuff...
+      - echo Installing some stuff...
+      - dotnet --version
+      - dotnet --list-sdks
+      - dotnet --list-runtimes
   pre_build:
     commands:
-      - echo Installing source NPM dependencies...
-      # - cd ./src/
-      # - npm install
+      - echo Clean and restore dotnet project
+      - cd ./app/
+      - dotnet clean
+      - dotnet restore
   build:
     commands:
       - echo Build started on `date`
-      - echo Compiling the Node.js code
+      - dotnet publish ./src/ -c Release -o output
   post_build:
     commands:
       - echo Build completed on `date`
