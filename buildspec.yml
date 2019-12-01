@@ -10,19 +10,22 @@ phases:
       - dotnet --version
       - dotnet --list-sdks
       - dotnet --list-runtimes
+      - ls
   pre_build:
     commands:
       - echo Clean and restore dotnet project
-      - cd ./app/
+      - cd ./app/src
       - dotnet clean
       - dotnet restore
   build:
     commands:
       - echo Build started on `date`
-      - dotnet publish ./src/ -c Release -o output
+      - dotnet publish ./src/ -c Release -o ../../output
   post_build:
     commands:
       - echo Build completed on `date`
+      - cd ./app/src
+      - ls
 # Include only the files required for your application to run.
 # Do not use recursively include artifacts from node_modules directory as it will include unnecessary packages
 # used only for building and testing.
