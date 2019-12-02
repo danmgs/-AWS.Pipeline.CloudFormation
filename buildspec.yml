@@ -28,6 +28,7 @@ phases:
       - echo Build completed on `date`
       - cd ../..
       - ls
+      - ls output
 # Include only the files required for your application to run.
 # Do not use recursively include artifacts from node_modules directory as it will include unnecessary packages
 # used only for building and testing.
@@ -36,5 +37,6 @@ artifacts:
   base-directory: app
   files:
     - output/*
+    - output/**
     - appspec.yml
     - scripts/*
