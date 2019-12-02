@@ -2,4 +2,4 @@
 
 ## After Install Script ..
 
-dotnet run
+dotnet /usr/app/app.dll
