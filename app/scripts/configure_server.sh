@@ -16,6 +16,17 @@ cat <<EOF >> /etc/httpd/conf.d/default-site.conf
   </Directory>
   ProxyPass / http://127.0.0.1:5000/
   ProxyPassReverse / http://127.0.0.1:5000/
+
+
+  ProxyPass /lib http://127.0.0.1:5000/
+  ProxyPassReverse /lib http://127.0.0.1:5000/
+
+  ProxyPass /css http://127.0.0.1:5000/
+  ProxyPassReverse /css http://127.0.0.1:5000/
+
+  ProxyPass /js http://127.0.0.1:5000/js
+  ProxyPassReverse /js http://127.0.0.1:5000/
+
 </VirtualHost>
 EOF
 
