@@ -90,10 +90,11 @@ Parameters:
   CodeBuildImage:
     Description: The CodeBuild Image  # https://docs.amazonaws.cn/en_us/codebuild/latest/userguide/build-env-ref-available.html
     Type: String
-    Default: aws/codebuild/standard:2.0
+    Default: aws/codebuild/standard:3.0
     AllowedValues:
     - aws/codebuild/standard:1.0
     - aws/codebuild/standard:2.0
+    - aws/codebuild/standard:3.0
     - aws/codebuild/amazonlinux2-x86_64-standard:1.0
     - aws/codebuild/amazonlinux2-x86_64-standard:2.0
     - aws/codebuild/windows-base:1.0

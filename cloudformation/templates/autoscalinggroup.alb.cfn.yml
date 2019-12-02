@@ -347,7 +347,7 @@ Mappings:
       HVM64: ami-f976839e
       HVMG2: NOT_SUPPORTED
     eu-west-3:
-      HVM64: ami-0ebc281c20e89ba4b
+      HVM64: ami-00ee6651b7f9ca24d
       HVMG2: NOT_SUPPORTED
     eu-central-1:
       HVM64: ami-0233214e13e500f77
@@ -442,16 +442,16 @@ Resources:
         - Key: Name
           PropagateAtLaunch: 'false'
           Value: !Sub "${AWS::StackName}-EC2Instance"
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT15M
-        Count: '1'
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MinInstancesInService: '1'
-        MaxBatchSize: '1'
-        PauseTime: PT15M
-        WaitOnResourceSignals: 'true'
+    # CreationPolicy:
+    #   ResourceSignal:
+    #     Timeout: PT15M
+    #     Count: '1'
+    # UpdatePolicy:
+    #   AutoScalingRollingUpdate:
+    #     MinInstancesInService: '1'
+    #     MaxBatchSize: '1'
+    #     PauseTime: PT15M
+    #     WaitOnResourceSignals: 'true'
 
   LaunchConfig:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
@@ -463,7 +463,7 @@ Resources:
             yum:
               ruby: []
               git: []
-              aws-cli: []
+              # aws-cli: [] # not required for this eu-west-3 AMI
               httpd: []
           files:
             /home/ec2-user/install:
@@ -553,22 +553,22 @@ Resources:
       Cooldown: '60'
       ScalingAdjustment: '-1'
 
-  # CPUAlarmHigh:
-  #   Type: 'AWS::CloudWatch::Alarm'
-  #   Properties:
-  #     AlarmDescription: Scale-up if CPU > 90% for 10 minutes
-  #     MetricName: CPUUtilization
-  #     Namespace: AWS/EC2
-  #     Statistic: Average
-  #     Period: '300'
-  #     EvaluationPeriods: '2'
-  #     Threshold: '90'
-  #     AlarmActions:
-  #       - !Ref WebServerScaleUpPolicy
-  #     Dimensions:
-  #       - Name: AutoScalingGroupName
-  #         Value: !Ref WebServerGroup
-  #     ComparisonOperator: GreaterThanThreshold
+  CPUAlarmHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '2'
+      Threshold: '90'
+      AlarmActions:
+        - !Ref WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup
+      ComparisonOperator: GreaterThanThreshold
 
   # CPUAlarmLow:
   #   Type: 'AWS::CloudWatch::Alarm'

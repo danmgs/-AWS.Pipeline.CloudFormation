@@ -295,7 +295,7 @@ Mappings:
       HVM64: ami-f976839e
       HVMG2: NOT_SUPPORTED
     eu-west-3:
-      HVM64: ami-0ebc281c20e89ba4b
+      HVM64: ami-00ee6651b7f9ca24d
       HVMG2: NOT_SUPPORTED
     eu-central-1:
       HVM64: ami-0233214e13e500f77

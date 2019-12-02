@@ -8,7 +8,11 @@ These templates will:
 - create of a CodeBuild Project Configuration
 - create of a CodePipeline Configuration
 
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram.png)
+
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram.svg)
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Custom.svg)
 
 ## Prerequisites
 
@@ -110,12 +114,43 @@ These file are located in **/scripts/** directory.
 
 To run under EC2 instance :
 
+## check EC2 service
+
 ```
-# check EC2 setup
-
-sudo service codedeploy-agent status
+# AWS AMI Linux 1
 sudo service --status-all
+sudo service codedeploy-agent status
 
+sudo service httpd stop
+sudo service httpd start
+sudo service httpd restart
+```
+
+```
+# AWS AMI Linux 2
+sudo systemctl
+sudo systemctl status codedeploy-agent
+sudo systemctl status httpd
+
+sudo systemctl stop httpd.service
+sudo systemctl start httpd.service
+sudo systemctl restart httpd.service
+```
+
+```
+# Kill process
+sudo ps aux | grep dotnet
+killall -KILL dotnet
+```
+
+```
+# Find out which port number a process is listening on
+sudo netstat -ltnp
+sudo netstat -ltnp | grep dotnet
+```
+
+```
+# Show Code Agent Log
 cat /var/log/aws/codedeploy-agent/codedeploy-agent.log
 ```
 
