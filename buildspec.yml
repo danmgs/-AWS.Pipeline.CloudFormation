@@ -22,11 +22,11 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - dotnet publish -c Release -o ../../output
+      - dotnet publish -c Release -o ../output
   post_build:
     commands:
       - echo Build completed on `date`
-      - cd ../..
+      - cd ..
       - ls
       - ls output
 # Include only the files required for your application to run.
@@ -36,7 +36,6 @@ phases:
 artifacts:
   base-directory: app
   files:
-    - output/*
-    - output/**
+    - output/**/*
     - appspec.yml
     - scripts/*

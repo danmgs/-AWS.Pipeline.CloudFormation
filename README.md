@@ -86,7 +86,7 @@ Alternatively, you can use **packaged-s3-pipeline-parent-stack.cfn.yml** to uplo
 This file details how to build the application and generate and a build artifact.
 
 
-- **appspec.yml** is used by CodeDeploy. It is placed in the root of the build artifact.
+- [**appspec.yml**](https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html) is used by CodeDeploy. It is placed in the root of the build artifact.
 
 This file details how to setup the application:
 
