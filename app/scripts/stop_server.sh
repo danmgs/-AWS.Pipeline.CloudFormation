@@ -1,5 +1,14 @@
 #!/bin/bash
 
-pkill httpd
+## AWS AMI Linux 2 ##
+isExistApp=`pgrep httpd`
+if [[ -n  $isExistApp ]]; then
+    systemctl stop httpd.service
+fi
 
-pkill dotnet
+# https://www.linode.com/docs/tools-reference/tools/use-killall-and-kill-to-stop-processes-on-linux/
+
+isExistProcess=`pgrep dotnet`
+if [[ -n  $isExistProcess ]]; then
+    killall -KILL dotnet
+fi
