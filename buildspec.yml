@@ -12,7 +12,7 @@ phases:
       - dotnet --list-runtimes
       - pwd
       - ls
-      - docker version
+      - docker ps
   pre_build:
     commands:
       - echo Clean and restore dotnet project
