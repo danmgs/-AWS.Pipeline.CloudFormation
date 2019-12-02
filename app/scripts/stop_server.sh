@@ -8,7 +8,7 @@
 
 ## AWS AMI Linux 2 ##
 isExistApp = `pgrep httpd`
-if [[ -n  $isExistApp ]]; then-
+if [[ -n  $isExistApp ]]; then
     systemctl stop httpd.service
 fi
 
