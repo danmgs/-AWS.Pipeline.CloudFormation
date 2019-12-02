@@ -9,6 +9,7 @@ fi
 
 cat <<EOF >> /etc/httpd/conf.d/default-site.conf
  <VirtualHost *:80>
+  DocumentRoot /usr/app
   ProxyPass / http://127.0.0.1:5000/
   ProxyPassReverse / http://127.0.0.1:5000/
 </VirtualHost>
