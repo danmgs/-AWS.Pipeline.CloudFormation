@@ -30,7 +30,9 @@ namespace app
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             var cwd = Directory.GetCurrentDirectory();
-            Console.WriteLine(cwd);
+            Console.WriteLine(" *** Current working directory should contain wwwroot to server static files ***");
+            Console.WriteLine($"Current working directory : {cwd}");
+            
 
             if (env.IsDevelopment())
             {
