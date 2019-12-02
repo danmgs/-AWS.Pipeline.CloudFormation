@@ -7,7 +7,7 @@ if [ -f /etc/httpd/conf.d/default-site.conf ]; then
     echo "delete"
 fi
 
-cat <<EOF > /etc/httpd/conf.d/default-site.conf
+cat <<EOF >> /etc/httpd/conf.d/default-site.conf
  <VirtualHost *:80>
   ProxyPass / http://127.0.0.1:5000/
   ProxyPassReverse / http://127.0.0.1:5000/
