@@ -9,7 +9,11 @@ fi
 
 cat <<EOF >> /etc/httpd/conf.d/default-site.conf
  <VirtualHost *:80>
-  DocumentRoot /usr/app
+  DocumentRoot /usr/app/wwwroot
+  <Directory "/usr/app/wwwroot">
+    AllowOverride None
+    Require all granted
+  </Directory>
   ProxyPass / http://127.0.0.1:5000/
   ProxyPassReverse / http://127.0.0.1:5000/
 </VirtualHost>

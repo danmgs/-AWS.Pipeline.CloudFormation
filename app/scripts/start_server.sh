@@ -7,3 +7,5 @@
 ## AWS AMI Linux 2 ##
 # systemctl start httpd.service
 # systemctl enable httpd.service
+
+systemctl start httpd.service
