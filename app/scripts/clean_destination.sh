@@ -8,5 +8,3 @@ if [ -d /usr/app ]; then
     rm -rf /usr/app
 fi
 mkdir -vp /usr/app
-
-/etc/httpd/conf.d/default-site.conf
