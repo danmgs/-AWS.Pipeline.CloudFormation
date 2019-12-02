@@ -1,5 +1,0 @@
-#!/bin/bash
-
-## After Install Script ..
-
-dotnet /usr/app/app.dll --server.urls "http://*:80" &

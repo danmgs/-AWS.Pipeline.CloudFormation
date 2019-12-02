@@ -1,17 +1,17 @@
 #!/bin/bash
 
 ## AWS AMI Linux 1 ##
-isExistApp = `pgrep httpd`
-if [[ -n  $isExistApp ]]; then
-    service httpd stop
-fi
+# isExistApp = `pgrep httpd`
+# if [[ -n  $isExistApp ]]; then
+#     service httpd stop
+# fi
 
 ## AWS AMI Linux 2 ##
-# systemctl start httpd.service
-# isExistApp = `pgrep httpd`
-# if [[ -n  $isExistApp ]]; then-
-#     systemctl stop httpd.service
-# fi
+systemctl start httpd.service
+isExistApp = `pgrep httpd`
+if [[ -n  $isExistApp ]]; then-
+    systemctl stop httpd.service
+fi
 
 # https://www.linode.com/docs/tools-reference/tools/use-killall-and-kill-to-stop-processes-on-linux/
 

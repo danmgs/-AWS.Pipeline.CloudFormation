@@ -5,14 +5,17 @@ files:
     destination: /usr/app
 hooks:
   ApplicationStop:
-    - location: scripts/stop_server
+    - location: scripts/stop_server.sh
       timeout: 200
       runas: root
   BeforeInstall:
-    - location: scripts/clean_destination
+    - location: scripts/clean_destination.sh
+      timeout: 200
+      runas: root
+    - location: scripts/configure_server.sh
       timeout: 200
       runas: root
   AfterInstall:
-    - location: scripts/afterInstall
+    - location: scripts/afterInstall.sh
       timeout: 100
       runas: root
