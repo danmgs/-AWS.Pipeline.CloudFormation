@@ -103,7 +103,7 @@ Should be provided with dotnet core sdk in order to build the dotnet core 3.0 we
 This launcher will package all the nested templates into a final one .
 For instance, this template is named **packaged-s3-pipeline-parent-stack.cfn.yml**.
 
-You will be asked to deploy the stack to AWS : you can then accept by typing "**y**".
+You will be asked to deploy the stack to AWS.
 
 Alternatively, you can use **packaged-s3-pipeline-parent-stack.cfn.yml** to upload it in AWS CloudFormation console for manual deployment.
 
@@ -173,18 +173,14 @@ This artifact is composed of the application ready to deploy and an **appspec.ym
 
 2. [**appspec.yml**](https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html) is used by CodeDeploy.
 
-This file MUST BE placed in the root of the build output artifact.
+In order to be process by CodeDeploy, this file must be placed in the root of the build output artifact.
 
 It details how to setup the application y running a workflow composed of "hooks".
 
 Hooks are events defined by customized command scripts which run on EC2 instances, sequentially:
 
 ```
-..
-ApplicationStop
-BeforeInstall
-AfterInstall
-..
+ApplicationStop -> BeforeInstall -> AfterInstall -> ApplicationStart
 ```
 
 These file are located in **/scripts/** directory.
@@ -215,9 +211,12 @@ sudo systemctl restart httpd.service
 ```
 
 ```
-# Kill process
+# Show and kill process
+pstree
 sudo ps aux | grep dotnet
+
 killall -KILL dotnet
+pkill dotnet
 ```
 
 ```
@@ -242,6 +241,23 @@ cat /var/log/cfn-init.log
 cat /var/log/cloud-init.log
 cat /var/log/cloud-init-output.log
 ```
+
+```
+# Show CodeDeploy logs
+cat /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log
+```
+
+```
+# Setup CloudWatch Agent manually
+# EC2 requires having IAM Role with CloudWatch Write Permissions.
+# https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html
+sudo yum install -y awslogs
+sudo systemctl start awslogsd
+nano /etc/awslogs/awscli.conf # -> edit file to with your region.
+sudo systemctl enable awslogsd.service
+sudo systemctl status awslogsd
+```
+
 
 ```
 # Various commands

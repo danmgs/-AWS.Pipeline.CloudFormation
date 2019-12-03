@@ -6,4 +6,5 @@
 # yum install -y httpd
 
 ## AWS AMI Linux 2 ##
+echo "- install dependencies"
 yum install -y httpd.x86_64

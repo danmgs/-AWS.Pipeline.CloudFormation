@@ -1,3 +1,5 @@
 #!/bin/bash
 
-systemctl start httpd.service
+systemctl restart httpd.service
+
+echo "- httpd.service started"

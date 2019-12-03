@@ -6,5 +6,7 @@
 
 if [ -d /usr/app ]; then
     rm -rf /usr/app
+    echo "- directory removed /usr/app"
 fi
+
 mkdir -vp /usr/app

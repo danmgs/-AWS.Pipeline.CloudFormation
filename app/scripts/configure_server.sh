@@ -4,7 +4,7 @@
 
 if [ -f /etc/httpd/conf.d/default-site.conf ]; then
     rm -f /etc/httpd/conf.d/default-site.conf
-    echo "delete"
+    echo "- file deleted /etc/httpd/conf.d/default-site.conf"
 fi
 
 cat <<EOF >> /etc/httpd/conf.d/default-site.conf
@@ -14,4 +14,4 @@ cat <<EOF >> /etc/httpd/conf.d/default-site.conf
 </VirtualHost>
 EOF
 
-echo "file created"
+echo "- file created /etc/httpd/conf.d/default-site.conf"
