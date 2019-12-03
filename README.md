@@ -17,30 +17,27 @@ You should have aws cli installed and configured with your AWS credentials on yo
 ```
 | -- /cloudformation/
         |
-        | -- /templates/                                  -> The nested templates
+        | -- /templates/                                        -> The nested templates
                   | -- autoscalinggroup.alb.cfn.yml
                   | -- codebuild.cfn.yml
                   | -- codedeploy.cfn.yml
                   | -- codepipeline-github-events.cfn.yml
                   | -- vpc.network.cfn.yml
         |
-        | -- aws-cli-deploy.bat                           -> The project launcher
-        | -- packaged-s3-pipeline-parent-stack.cfn.yml    -> The result template
+        | -- aws-cli-deploy.bat                                 -> The project launcher
+        | -- packaged-s3-pipeline-parent-stack.cfn.yml          -> The result template
 
-
-
-| -- /scripts/                                              -> The scripts for CodeDeploy phases
-
-        | -- run_application.sh
-        | -- install_dependencies.sh
+| -- /scripts/                                                  -> The scripts for CodeDeploy phases
         | -- clean_destination.sh
         | -- configure_server.sh
+        | -- install_dependencies.sh
+        | -- start_application.sh
         | -- start_server.sh
         | -- stop_server.sh
 |
-| -- appspec.yml                                            -> The spec for CodeDeploy
-| -- buildspec.yml                                          -> The spec for CodeBuild
-| -- index.html                                             -> The Website Source
+| -- appspec.yml                                                -> The spec for CodeDeploy
+| -- buildspec.yml                                              -> The spec for CodeBuild
+| -- index.html                                                 -> The Website Source
 
 ```
 
@@ -180,19 +177,21 @@ This file MUST BE placed in the root of the build output artifact.
 
 It details how to setup the application y running a workflow composed of "hooks".
 
-Hooks are defined by customized command scripts which run sequentially via steps :
+Hooks are events defined by customized command scripts which run on EC2 instances, sequentially:
 
 ```
+..
 ApplicationStop
 BeforeInstall
 AfterInstall
+..
 ```
 
 These file are located in **/scripts/** directory.
 
 ## Some useful commands
 
-To run under EC2 instance when connected via remote SSH :
+To run under EC2 instance when accessed via remote SSH :
 
 ```
 # AWS AMI Linux 1
