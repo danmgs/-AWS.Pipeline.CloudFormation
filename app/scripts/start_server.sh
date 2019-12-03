@@ -2,4 +2,4 @@
 
 systemctl restart httpd.service
 
-echo "- httpd.service started"
+echo "- httpd.service restarted"

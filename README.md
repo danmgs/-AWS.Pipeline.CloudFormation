@@ -175,15 +175,28 @@ This artifact is composed of the application ready to deploy and an **appspec.ym
 
 In order to be process by CodeDeploy, this file must be placed in the root of the build output artifact.
 
-It details how to setup the application y running a workflow composed of "hooks".
+It details how to setup the application by running a workflow composed of "hooks".
 
-Hooks are events defined by customized command scripts which run on EC2 instances, sequentially:
+Hooks are events defined by customized command scripts which run on EC2 instances, sequentially.
 
+These file are located in **/scripts/** directory.
+
+First CodePipeline run:
+```
+-> BeforeInstall -> AfterInstall -> ApplicationStart -> ApplicationStop
+```
+
+2nd CodePipeline run:
 ```
 ApplicationStop -> BeforeInstall -> AfterInstall -> ApplicationStart
 ```
 
-These file are located in **/scripts/** directory.
+The first time, **ApplicationStop** hook doesn't run.
+By design, [**ApplicationStop** runs but with scripts from **previous commit**.](https://github.com/aws/aws-codedeploy-agent/issues/80).
+
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CodeDeploySequence.PNG)
+
 
 ## Some useful commands
 
@@ -251,6 +264,8 @@ cat /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deplo
 # Setup CloudWatch Agent manually
 # EC2 requires having IAM Role with CloudWatch Write Permissions.
 # https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html
+
+yum update -y
 sudo yum install -y awslogs
 sudo systemctl start awslogsd
 nano /etc/awslogs/awscli.conf # -> edit file to with your region.

@@ -11,8 +11,6 @@ else
     echo "- no httpd.service to stop"
 fi
 
-# https://www.linode.com/docs/tools-reference/tools/use-killall-and-kill-to-stop-processes-on-linux/
-
 pgrep dotnet
 
 isExistProcess=`pgrep dotnet`
