@@ -1,11 +1,5 @@
 #!/bin/bash
 
-## AWS AMI Linux 1 ##
-# isExistApp=`pgrep httpd`
-# if [[ -n  $isExistApp ]]; then
-#     service httpd stop
-# fi
-
 ## AWS AMI Linux 2 ##
 isExistApp=`pgrep httpd`
 if [[ -n  $isExistApp ]]; then

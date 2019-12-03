@@ -15,10 +15,10 @@ hooks:
     - location: scripts/configure_server.sh
       timeout: 200
       runas: root
+  AfterInstall:
     - location: scripts/start_server.sh
       timeout: 100
       runas: root
-  AfterInstall:
-    - location: scripts/afterInstall.sh
+    - location: scripts/run_application.sh
       timeout: 100
       runas: root

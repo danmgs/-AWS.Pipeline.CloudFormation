@@ -8,12 +8,6 @@ These templates will setup an insfrastructure and a CI/CD pipeline :
 - creation of a CodeBuild Project Configuration
 - creation of a CodePipeline Configuration
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram0.png)
-
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram.svg)
-
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Custom.svg)
-
 ## Prerequisites
 
 You should have aws cli installed and configured with your AWS credentials on your computer.
@@ -37,7 +31,7 @@ You should have aws cli installed and configured with your AWS credentials on yo
 
 | -- /scripts/                                              -> The scripts for CodeDeploy phases
 
-        | -- afterInstall.sh
+        | -- run_application.sh
         | -- install_dependencies.sh
         | -- clean_destination.sh
         | -- configure_server.sh
@@ -116,34 +110,19 @@ You will be asked to deploy the stack to AWS : you can then accept by typing "**
 
 Alternatively, you can use **packaged-s3-pipeline-parent-stack.cfn.yml** to upload it in AWS CloudFormation console for manual deployment.
 
+## Walkthrough - Infrastructure and architecture
 
-## Description - Build and deploy
+### Infrastructure
 
-- **buildspec.yml** is used by CodeBuild.
+The Cloud Formation templates generate an AutoScalingGroup with an Application LoadBalancer spread across 2 AZs in public subnets of the same VPC.
 
-This file details how to build the application and generate and a build artifact.
+EC2 instances will be provided with :
+- an AMI containing .Net Core 3.0 and Linux.
+- a setup of a code deploy agent during provisionning thanks to cfn-init.
 
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Custom.svg)
 
-- [**appspec.yml**](https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html) is used by CodeDeploy. It is placed in the root of the build artifact.
-
-This file details how to setup the application:
-
-> What to deploy  (regarding source files of the website) :
-
-```
-artifacts:
-  files:
-    - index.html
-    - appspec.yml
-    - scripts/*
-```
-
-> How to deploy :
-
-using the event hooks section (BeforeInstall / ApplicationStop / AfterInstall ..) in order to run in order some scripts files.
-These file are located in **/scripts/** directory.
-
-## Description - Web Configuration and Security
+### Web Configuration and Security
 
 1. A reverse proxy is configured via the script file **/scripts/configure_server.sh**
 
@@ -151,13 +130,13 @@ It will forward the request by the users coming from the Application Load Balanc
 
 ```
 # Config in file /etc/httpd/conf.d/default-site.conf on EC2 instances
- <VirtualHost *:80>
+<VirtualHost *:80>
   ProxyPass / http://127.0.0.1:5000/
   ProxyPassReverse / http://127.0.0.1:5000/
 </VirtualHost>
 ```
 
-2. Additionally, the Load Balancer Resource is configure with a Security Group rule allowing :
+2. Additionally, the Load Balancer Resource is configured with a Security Group rule allowing :
 
 - people to reach it publicly via an external url on port **80**.
 
@@ -175,13 +154,45 @@ Note that in case you add new security rules and in order to apply them, you may
 sudo service httpd restart
 ```
 
+## Walkthrough - Build and deploy
 
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram.svg)
+
+1. **buildspec.yml** is used by CodeBuild.
+
+This file details how to build the application and generate and a build artifact containing :
+
+```
+artifacts:
+  base-directory: app
+  files:
+    - output/**/*
+    - appspec.yml
+    - scripts/*
+```
+
+This artifact is composed of the application ready to deploy and an **appspec.yml** file.
+
+
+2. [**appspec.yml**](https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html) is used by CodeDeploy.
+
+This file MUST BE placed in the root of the build output artifact.
+
+It details how to setup the application y running a workflow composed of "hooks".
+
+Hooks are defined by customized command scripts which run sequentially via steps :
+
+```
+ApplicationStop
+BeforeInstall
+AfterInstall
+```
+
+These file are located in **/scripts/** directory.
 
 ## Some useful commands
 
 To run under EC2 instance when connected via remote SSH :
-
-## check EC2 service
 
 ```
 # AWS AMI Linux 1
@@ -240,4 +251,5 @@ aws
 git
 ```
 
-For security reason and as a best practice, **you should NOT USE aws cli with any personal AWS credentials on the EC2 instances**. Use IAM Roles instead !
+For security reason, **you should NOT USE aws cli with any personal AWS credentials on the EC2 instances**. <br/>
+As a best practice, use IAM Roles instead !

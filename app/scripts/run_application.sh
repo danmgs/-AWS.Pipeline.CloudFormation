@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## After Install Script ..
+## Run the website application
 
 # must change the current working dir for website static files to work !
 cd /usr/app
