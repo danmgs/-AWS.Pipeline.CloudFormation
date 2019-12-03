@@ -3,6 +3,7 @@
 # Cloud formation parent template
 # Author: NGUYEN Daniel
 #
+# Parent Stack for the setup an insfrastructure and a CI/CD pipeline.
 # - Creation of an AutoScaling Group with an Application Load Balancer
 # - Creation of a CodeDeploy Project Configuration in AWS.
 # - Creation of a CodeBuild Project Configuration in AWS.
@@ -10,6 +11,7 @@
 #
 ################################################################################
 
+Description: Parent Stack for the setup of an insfrastructure and a CI/CD pipeline.
 
 Parameters:
 
@@ -53,6 +55,16 @@ Parameters:
       i2.2xlarge, i2.4xlarge, i2.8xlarge, d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge,
       hi1.4xlarge, hs1.8xlarge, cr1.8xlarge, cc2.8xlarge, cg1.4xlarge]
     ConstraintDescription: must be a valid EC2 instance type.
+  AMIId:
+    Description: >-
+      The AMI of your region must provide, in order to be compatible and run the application:
+      Amazon Linux 2 + .NET Core 3.0 .
+      Amazon Linux 2 with .NET Core 3.0 and Mono 5.18
+      .NET Core 3.0, Mono 5.18, and PowerShell 6.2 pre-installed to run your .NET applications on Amazon Linux 2 with Long Term Support (LTS).
+    Type: String
+    Default: ami-00ee6651b7f9ca24d
+    AllowedPattern : "^(?:ami-[0-9a-z]+|)$"
+    ConstraintDescription: must be a valid AMI ID.
   OperatorEMail:
     Description: EMail address to notify if there are any scaling operations
     Type: String
@@ -199,6 +211,7 @@ Metadata:
           default: "AutoScalingGroup Specific Configuration"
         Parameters:
           - InstanceType
+          - AMIId
           - OperatorEMail
           - KeyName
           - SSHLocation
@@ -253,6 +266,7 @@ Resources:
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         InstanceType: !Ref InstanceType
+        AMIId: !Ref AMIId
         VPC: !GetAtt VPCNetworkStack.Outputs.VPCId
         PublicSubnet1: !GetAtt VPCNetworkStack.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt VPCNetworkStack.Outputs.PublicSubnet2
@@ -313,6 +327,12 @@ Resources:
 
 Outputs:
 
+  ExternalUrl:
+    Value: !GetAtt AutoScalingGroupWithALBStack.Outputs.ExternalUrl
+
+  GitRepositoryUrl:
+    Value: !GetAtt CodePipelineStack.Outputs.GitRepositoryUrl
+
   VPC:
     Value: !GetAtt VPCNetworkStack.Outputs.VPCId
 
@@ -321,9 +341,6 @@ Outputs:
 
   PublicSubnet2:
     Value: !GetAtt VPCNetworkStack.Outputs.PublicSubnet2
-
-  ExternalUrl:
-    Value: !GetAtt AutoScalingGroupWithALBStack.Outputs.ExternalUrl
 
   WebServerAutoScalingGroupName:
     Value: !GetAtt AutoScalingGroupWithALBStack.Outputs.WebServerAutoScalingGroupName

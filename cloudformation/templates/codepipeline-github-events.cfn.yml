@@ -208,3 +208,9 @@ Resources:
                   - 'ecs:*'
                   - 'ssm:*'
                 Resource: '*'
+
+Outputs:
+
+  GitRepositoryUrl:
+    Description: The Git Repository Url
+    Value: !Sub "https://github.com/${GitHubOwner}/${RepositoryName}"
