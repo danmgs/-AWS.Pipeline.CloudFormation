@@ -1,24 +1,25 @@
 version: 0.0
 os: linux
 files:
-  - source: /src
-    destination: /var/www/html/
+  - source: /output
+    destination: /usr/app
 hooks:
   ApplicationStop:
-    - location: scripts/stop_server
-      timeout: 300
+    - location: scripts/stop_server.sh
+      timeout: 200
       runas: root
   BeforeInstall:
-    - location: scripts/clean_destination
-      timeout: 300
+    - location: scripts/clean_destination.sh
+      timeout: 200
       runas: root
-    - location: scripts/install_dependencies
-      timeout: 300
-      runas: root
-    - location: scripts/start_server
-      timeout: 300
+    - location: scripts/configure_server.sh
+      timeout: 200
       runas: root
   AfterInstall:
-    - location: scripts/afterInstall
-      timeout: 180
+    - location: scripts/start_server.sh
+      timeout: 100
+      runas: root
+  ApplicationStart:
+    - location: scripts/start_application.sh
+      timeout: 100
       runas: root

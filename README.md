@@ -2,13 +2,11 @@
 
 A project to demo AWS CodePipeline with Cloud Formation templates.
 
-These templates will:
-- create of an AutoScaling Group with an Application Load Balancer
-- create of a CodeDeploy Project Configuration
-- create of a CodeBuild Project Configuration
-- create of a CodePipeline Configuration
-
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram.svg)
+These templates will setup an insfrastructure and a CI/CD pipeline :
+- creation of an AutoScaling Group with an Application Load Balancer
+- creation of a CodeDeploy Project Configuration
+- creation of a CodeBuild Project Configuration
+- creation of a CodePipeline Configuration
 
 ## Prerequisites
 
@@ -19,26 +17,27 @@ You should have aws cli installed and configured with your AWS credentials on yo
 ```
 | -- /cloudformation/
         |
-        | -- /templates/                                  -> The nested templates
+        | -- /templates/                                        -> The nested templates
                   | -- autoscalinggroup.alb.cfn.yml
                   | -- codebuild.cfn.yml
                   | -- codedeploy.cfn.yml
                   | -- codepipeline-github-events.cfn.yml
                   | -- vpc.network.cfn.yml
         |
-        | -- aws-cli-deploy.bat                           -> The project launcher
-        | -- packaged-s3-pipeline-parent-stack.cfn.yml    -> The result template
+        | -- aws-cli-deploy.bat                                 -> The project launcher
+        | -- packaged-s3-pipeline-parent-stack.cfn.yml          -> The result template
 
-
-
-| -- /scripts/
-        | -- install_dependencies
-        | -- start_server
-        | -- stop_server
+| -- /scripts/                                                  -> The scripts for CodeDeploy phases
+        | -- clean_destination.sh
+        | -- configure_server.sh
+        | -- install_dependencies.sh
+        | -- start_application.sh
+        | -- start_server.sh
+        | -- stop_server.sh
 |
-| -- appspec.yml                                            -> The spec for CodeDeploy
-| -- buildspec.yml                                          -> The spec for CodeBuild
-| -- index.html                                             -> The Website Source
+| -- appspec.yml                                                -> The spec for CodeDeploy
+| -- buildspec.yml                                              -> The spec for CodeBuild
+| -- index.html                                                 -> The Website Source
 
 ```
 
@@ -56,7 +55,7 @@ You can run each scripts in the **/cloudformation/templates** directory separate
 
 A better way is to run the custom **aws-cli-deploy.bat**.
 
-- You need to configure with your settings the **aws-cli-deploy.bat**.
+1. You need to configure with your settings the **aws-cli-deploy.bat**.
 
 ```
 - YOUR_BUCKET_NAME
@@ -66,56 +65,235 @@ A better way is to run the custom **aws-cli-deploy.bat**.
 - YOUR_STACK_NAME
 ```
 
-- You need to configure the **parameters.json** file with your parameters.
+2. You need to configure the **parameters.json** file with your parameters.
 These will be used by the final cloud formation template.
 
-- By clicking on the **aws-cli-deploy.bat**, you will follow instructions.
+To ensure compatibility with the build & deploy scripts & the run of the webapp,
+some parameters must be taken into consideration :
+
+> Parameter "**AMIId**"
+
+Your AMI ID in your region must provide:
+
+- Amazon Linux 2
+- .NET Core 3.0 .
+
+Therefore here, for my region **eu-west-3**, I specify :
+
+```
+ID: ami-00ee6651b7f9ca24d
+
+Name: amzn2-ami-hvm-2.0.20190823-x86_64-gp2-mono-2019.10.09
+
+Description:
+Amazon Linux 2 with .NET Core 3.0 and Mono 5.18
+.NET Core 3.0, Mono 5.18, and PowerShell 6.2 pre-installed to run your .NET applications on Amazon Linux 2 with Long Term Support (LTS).
+```
+
+> Parameter "**CodeBuildImage**"
+
+Should be provided with dotnet core sdk in order to build the dotnet core 3.0 webapp.
+
+```
+ aws/codebuild/standard:3.0
+```
+
+3. By clicking on the **aws-cli-deploy.bat**, you will follow instructions.
 
 This launcher will package all the nested templates into a final one .
 For instance, this template is named **packaged-s3-pipeline-parent-stack.cfn.yml**.
 
-You will be asked to deploy the stack to AWS : you can then accept.
+You will be asked to deploy the stack to AWS.
 
 Alternatively, you can use **packaged-s3-pipeline-parent-stack.cfn.yml** to upload it in AWS CloudFormation console for manual deployment.
 
+## Walkthrough - Infrastructure and architecture
 
-## Build and deploy
+### Infrastructure
 
-- **buildspec.yml** is used by CodeBuild.
+The Cloud Formation templates generate an AutoScalingGroup with an Application LoadBalancer spread across 2 AZs in public subnets of the same VPC.
 
-This file details how to build the application and generate and a build artifact.
+EC2 instances will be provided with :
+- an AMI containing .Net Core 3.0 and Linux.
+- a setup of a code deploy agent during provisionning thanks to cfn-init.
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Custom.svg)
+
+### Web Configuration and Security
+
+1. A reverse proxy is configured via the script file **/scripts/configure_server.sh**
+
+It will forward the request by the users coming from the Application Load Balancer on port **80** towards the .Net Core Website listening on port **5000**.
+
+```
+# Config in file /etc/httpd/conf.d/default-site.conf on EC2 instances
+<VirtualHost *:80>
+  ProxyPass / http://127.0.0.1:5000/
+  ProxyPassReverse / http://127.0.0.1:5000/
+</VirtualHost>
+```
+
+2. Additionally, the Load Balancer Resource is configured with a Security Group rule allowing :
+
+- people to reach it publicly via an external url on port **80**.
 
 
-- **appspec.yml** is used by CodeDeploy. It is placed in the root of the build artifact.
+3. Likewise, AutoScaling Group's EC2 instances are configured with some Security Group Rules allowing :
 
-This file details how to setup the application:
+- incoming HTTP requests from the Load Balancer's Security Group to: EC2 instances port **80** (added by default to reach httpd's sample page deployed in **/var/www/html**)
+- incoming HTTP requests from the Load Balancer's Security Group to: EC2 instances port **5000** (added to reach **.Net Core Website**).
 
-> What to deploy  (regarding source files of the website) :
+- remote SSH Access for convenience (using your private Key pair).
+
+Note that in case you add new security rules and in order to apply them, you may need to restart the httpd service on the EC2 instances:
+
+```
+sudo service httpd restart
+```
+
+## Walkthrough - Build and deploy
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram.svg)
+
+1. **buildspec.yml** is used by CodeBuild.
+
+This file details how to build the application and generate and a build artifact containing :
 
 ```
 artifacts:
+  base-directory: app
   files:
-    - index.html
+    - output/**/*
     - appspec.yml
     - scripts/*
 ```
 
-> How to deploy :
+This artifact is composed of the application ready to deploy and an **appspec.yml** file.
 
-using the event hooks section (BeforeInstall / ApplicationStop / ..) in order to run in order some scripts files.
+
+2. [**appspec.yml**](https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html) is used by CodeDeploy.
+
+In order to be process by CodeDeploy, this file must be placed in the root of the build output artifact.
+
+It details how to setup the application by running a workflow composed of "hooks".
+
+Hooks are events defined by customized command scripts which run on EC2 instances, sequentially.
+
 These file are located in **/scripts/** directory.
+
+First CodePipeline run:
+```
+-> BeforeInstall -> AfterInstall -> ApplicationStart -> ApplicationStop
+```
+
+2nd CodePipeline run:
+```
+ApplicationStop -> BeforeInstall -> AfterInstall -> ApplicationStart
+```
+
+The first time, **ApplicationStop** hook doesn't run.
+By design, [**ApplicationStop** runs but with scripts from **previous commit**.](https://github.com/aws/aws-codedeploy-agent/issues/80).
+
+
+```
+# Show CodeDeploy logs
+cat /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log
+```
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CodeDeploySequence.PNG)
 
 
 ## Some useful commands
 
-To run under EC2 instance :
+To run under EC2 instance when accessed via remote SSH :
 
 ```
-# check EC2 setup
-
-sudo service codedeploy-agent status
+# AWS AMI Linux 1
 sudo service --status-all
+sudo service codedeploy-agent status
 
+sudo service httpd stop
+sudo service httpd start
+sudo service httpd restart
+```
+
+```
+# AWS AMI Linux 2
+sudo systemctl
+sudo systemctl status codedeploy-agent
+sudo systemctl status httpd
+
+sudo systemctl stop httpd.service
+sudo systemctl start httpd.service
+sudo systemctl restart httpd.service
+```
+
+```
+# Show and kill process
+pstree
+sudo ps aux | grep dotnet
+
+killall -KILL dotnet
+pkill dotnet
+```
+
+```
+# Find out which port number a process is listening on
+sudo netstat -ltnp
+sudo netstat -ltnp | grep dotnet
+```
+
+```
+# Show Code Agent Log
 cat /var/log/aws/codedeploy-agent/codedeploy-agent.log
 ```
 
+```
+# Show reverse-proxy configuration
+cat /etc/httpd/conf.d/default-site.conf
+```
+
+```
+# Show cloud init logs
+cat /var/log/cfn-init.log
+
+cat /var/log/cloud-init.log
+cat /var/log/cloud-init-output.log
+```
+
+```
+# Show CodeDeploy logs
+cat /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log
+```
+
+```
+# Setup CloudWatch Agent manually
+# EC2 requires having IAM Role with CloudWatch Write Permissions.
+# https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html
+
+yum update -y
+sudo yum install -y awslogs
+
+# edit file to with your region. Below, default get replaced with eu-west-3.
+sed -i 's/us-east-1/eu-west-3/g' /etc/awslogs/awscli.conf
+
+sudo systemctl start awslogsd
+sudo systemctl enable awslogsd.service
+
+sudo systemctl status awslogsd
+```
+
+```
+# Show CloudWatch Agent config and specify files to watch.
+cat /etc/awslogs/awslogs.conf
+```
+
+```
+# Various commands
+dotnet
+aws
+git
+```
+
+For security reason, **you should NOT USE aws cli with any personal AWS credentials on the EC2 instances**. <br/>
+As a best practice, use IAM Roles instead !

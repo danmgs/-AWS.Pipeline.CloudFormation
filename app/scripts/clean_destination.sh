@@ -4,7 +4,9 @@
 ## CodeDeploy Issue : "The deployment failed because a specified file already exists at this location: /var/www/html/index.html"
 ## Fix : https://github.com/aws/aws-codedeploy-agent/issues/14
 
-if [ -d /var/www/html ]; then
-    rm -rf /var/www/html
+if [ -d /usr/app ]; then
+    rm -rf /usr/app
+    echo "- directory removed /usr/app"
 fi
-mkdir -vp /var/www/html
+
+mkdir -vp /usr/app
