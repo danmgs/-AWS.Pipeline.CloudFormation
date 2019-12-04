@@ -195,6 +195,11 @@ The first time, **ApplicationStop** hook doesn't run.
 By design, [**ApplicationStop** runs but with scripts from **previous commit**.](https://github.com/aws/aws-codedeploy-agent/issues/80).
 
 
+```
+# Show CodeDeploy logs
+cat /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log
+```
+
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CodeDeploySequence.PNG)
 
 
@@ -251,6 +256,7 @@ cat /etc/httpd/conf.d/default-site.conf
 ```
 # Show cloud init logs
 cat /var/log/cfn-init.log
+
 cat /var/log/cloud-init.log
 cat /var/log/cloud-init-output.log
 ```
@@ -267,12 +273,20 @@ cat /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deplo
 
 yum update -y
 sudo yum install -y awslogs
+
+# edit file to with your region. Below, default get replaced with eu-west-3.
+sed -i 's/us-east-1/eu-west-3/g' /etc/awslogs/awscli.conf
+
 sudo systemctl start awslogsd
-nano /etc/awslogs/awscli.conf # -> edit file to with your region.
 sudo systemctl enable awslogsd.service
+
 sudo systemctl status awslogsd
 ```
 
+```
+# Show CloudWatch Agent config and specify files to watch.
+cat /etc/awslogs/awslogs.conf
+```
 
 ```
 # Various commands
