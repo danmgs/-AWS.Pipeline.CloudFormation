@@ -20,6 +20,10 @@
     "ParameterValue": "t2.micro"
   },
   {
+    "ParameterKey": "AMIId",
+    "ParameterValue": "ami-00ee6651b7f9ca24d"
+  },
+  {
     "ParameterKey": "OperatorEMail",
     "ParameterValue": "YOUR_OPERATOR_EMAIL"
   },
@@ -45,7 +49,7 @@
   },
   {
     "ParameterKey": "CodeBuildImage",
-    "ParameterValue": "aws/codebuild/standard:2.0"
+    "ParameterValue": "aws/codebuild/standard:3.0"
   },
   {
     "ParameterKey": "CodeBuildComputeType",
