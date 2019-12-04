@@ -4,21 +4,31 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 10
+      dotnet: 3.0
     commands:
-      - echo Installing Some stuff...
+      - echo Installing some stuff...
+      - dotnet --version
+      - dotnet --list-sdks
+      - dotnet --list-runtimes
+      - pwd
+      - ls
+      - docker -v
   pre_build:
     commands:
-      - echo Installing source NPM dependencies...
-      # - cd ./src/
-      # - npm install
+      - echo Clean and restore dotnet project
+      - cd ./app/src
+      - dotnet clean
+      - dotnet restore
   build:
     commands:
       - echo Build started on `date`
-      - echo Compiling the Node.js code
+      - dotnet publish -c Release -o ../output
   post_build:
     commands:
       - echo Build completed on `date`
+      - cd ..
+      - ls
+      - ls output
 # Include only the files required for your application to run.
 # Do not use recursively include artifacts from node_modules directory as it will include unnecessary packages
 # used only for building and testing.
@@ -26,6 +36,6 @@ phases:
 artifacts:
   base-directory: app
   files:
-    - src/index.html
+    - output/**/*
     - appspec.yml
     - scripts/*

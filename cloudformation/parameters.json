@@ -93,7 +93,7 @@
   },
   {
     "ParameterKey": "BranchName",
-    "ParameterValue": "master"
+    "ParameterValue": "YOUR_GITHUB_BRANCH"
   },
   {
     "ParameterKey": "RepositoryName",

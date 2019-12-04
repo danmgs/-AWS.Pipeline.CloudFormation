@@ -48,6 +48,16 @@ Parameters:
       i2.2xlarge, i2.4xlarge, i2.8xlarge, d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge,
       hi1.4xlarge, hs1.8xlarge, cr1.8xlarge, cc2.8xlarge, cg1.4xlarge]
     ConstraintDescription: must be a valid EC2 instance type.
+  AMIId:
+    Description: >-
+      The AMI of your region must provide, in order to be compatible and run the application:
+      Amazon Linux 2 + .NET Core 3.0 .
+      Amazon Linux 2 with .NET Core 3.0 and Mono 5.18
+      .NET Core 3.0, Mono 5.18, and PowerShell 6.2 pre-installed to run your .NET applications on Amazon Linux 2 with Long Term Support (LTS).
+    Type: String
+    Default: ami-00ee6651b7f9ca24d
+    AllowedPattern : "^(?:ami-[0-9a-z]+|)$"
+    ConstraintDescription: must be a valid AMI ID.
   VPC:
     Description: VPC to create the security group and EC2 instance into
     Type: AWS::EC2::VPC::Id
@@ -109,282 +119,12 @@ Metadata:
           default: EC2 from AutoScalingGroup Configuration
         Parameters:
           - InstanceType
+          - AMIId
           - VPC
           - PublicSubnet1
           - PublicSubnet2
           - KeyName
           - SSHLocation
-
-Mappings:
-  AWSInstanceType2Arch:
-    t1.micro:
-      Arch: HVM64
-    t2.nano:
-      Arch: HVM64
-    t2.micro:
-      Arch: HVM64
-    t2.small:
-      Arch: HVM64
-    t2.medium:
-      Arch: HVM64
-    t2.large:
-      Arch: HVM64
-    m1.small:
-      Arch: HVM64
-    m1.medium:
-      Arch: HVM64
-    m1.large:
-      Arch: HVM64
-    m1.xlarge:
-      Arch: HVM64
-    m2.xlarge:
-      Arch: HVM64
-    m2.2xlarge:
-      Arch: HVM64
-    m2.4xlarge:
-      Arch: HVM64
-    m3.medium:
-      Arch: HVM64
-    m3.large:
-      Arch: HVM64
-    m3.xlarge:
-      Arch: HVM64
-    m3.2xlarge:
-      Arch: HVM64
-    m4.large:
-      Arch: HVM64
-    m4.xlarge:
-      Arch: HVM64
-    m4.2xlarge:
-      Arch: HVM64
-    m4.4xlarge:
-      Arch: HVM64
-    m4.10xlarge:
-      Arch: HVM64
-    c1.medium:
-      Arch: HVM64
-    c1.xlarge:
-      Arch: HVM64
-    c3.large:
-      Arch: HVM64
-    c3.xlarge:
-      Arch: HVM64
-    c3.2xlarge:
-      Arch: HVM64
-    c3.4xlarge:
-      Arch: HVM64
-    c3.8xlarge:
-      Arch: HVM64
-    c4.large:
-      Arch: HVM64
-    c4.xlarge:
-      Arch: HVM64
-    c4.2xlarge:
-      Arch: HVM64
-    c4.4xlarge:
-      Arch: HVM64
-    c4.8xlarge:
-      Arch: HVM64
-    g2.2xlarge:
-      Arch: HVMG2
-    g2.8xlarge:
-      Arch: HVMG2
-    r3.large:
-      Arch: HVM64
-    r3.xlarge:
-      Arch: HVM64
-    r3.2xlarge:
-      Arch: HVM64
-    r3.4xlarge:
-      Arch: HVM64
-    r3.8xlarge:
-      Arch: HVM64
-    i2.xlarge:
-      Arch: HVM64
-    i2.2xlarge:
-      Arch: HVM64
-    i2.4xlarge:
-      Arch: HVM64
-    i2.8xlarge:
-      Arch: HVM64
-    d2.xlarge:
-      Arch: HVM64
-    d2.2xlarge:
-      Arch: HVM64
-    d2.4xlarge:
-      Arch: HVM64
-    d2.8xlarge:
-      Arch: HVM64
-    hi1.4xlarge:
-      Arch: HVM64
-    hs1.8xlarge:
-      Arch: HVM64
-    cr1.8xlarge:
-      Arch: HVM64
-    cc2.8xlarge:
-      Arch: HVM64
-  AWSInstanceType2NATArch:
-    t1.micro:
-      Arch: NATHVM64
-    t2.nano:
-      Arch: NATHVM64
-    t2.micro:
-      Arch: NATHVM64
-    t2.small:
-      Arch: NATHVM64
-    t2.medium:
-      Arch: NATHVM64
-    t2.large:
-      Arch: NATHVM64
-    m1.small:
-      Arch: NATHVM64
-    m1.medium:
-      Arch: NATHVM64
-    m1.large:
-      Arch: NATHVM64
-    m1.xlarge:
-      Arch: NATHVM64
-    m2.xlarge:
-      Arch: NATHVM64
-    m2.2xlarge:
-      Arch: NATHVM64
-    m2.4xlarge:
-      Arch: NATHVM64
-    m3.medium:
-      Arch: NATHVM64
-    m3.large:
-      Arch: NATHVM64
-    m3.xlarge:
-      Arch: NATHVM64
-    m3.2xlarge:
-      Arch: NATHVM64
-    m4.large:
-      Arch: NATHVM64
-    m4.xlarge:
-      Arch: NATHVM64
-    m4.2xlarge:
-      Arch: NATHVM64
-    m4.4xlarge:
-      Arch: NATHVM64
-    m4.10xlarge:
-      Arch: NATHVM64
-    c1.medium:
-      Arch: NATHVM64
-    c1.xlarge:
-      Arch: NATHVM64
-    c3.large:
-      Arch: NATHVM64
-    c3.xlarge:
-      Arch: NATHVM64
-    c3.2xlarge:
-      Arch: NATHVM64
-    c3.4xlarge:
-      Arch: NATHVM64
-    c3.8xlarge:
-      Arch: NATHVM64
-    c4.large:
-      Arch: NATHVM64
-    c4.xlarge:
-      Arch: NATHVM64
-    c4.2xlarge:
-      Arch: NATHVM64
-    c4.4xlarge:
-      Arch: NATHVM64
-    c4.8xlarge:
-      Arch: NATHVM64
-    g2.2xlarge:
-      Arch: NATHVMG2
-    g2.8xlarge:
-      Arch: NATHVMG2
-    r3.large:
-      Arch: NATHVM64
-    r3.xlarge:
-      Arch: NATHVM64
-    r3.2xlarge:
-      Arch: NATHVM64
-    r3.4xlarge:
-      Arch: NATHVM64
-    r3.8xlarge:
-      Arch: NATHVM64
-    i2.xlarge:
-      Arch: NATHVM64
-    i2.2xlarge:
-      Arch: NATHVM64
-    i2.4xlarge:
-      Arch: NATHVM64
-    i2.8xlarge:
-      Arch: NATHVM64
-    d2.xlarge:
-      Arch: NATHVM64
-    d2.2xlarge:
-      Arch: NATHVM64
-    d2.4xlarge:
-      Arch: NATHVM64
-    d2.8xlarge:
-      Arch: NATHVM64
-    hi1.4xlarge:
-      Arch: NATHVM64
-    hs1.8xlarge:
-      Arch: NATHVM64
-    cr1.8xlarge:
-      Arch: NATHVM64
-    cc2.8xlarge:
-      Arch: NATHVM64
-  AWSRegionArch2AMI:
-    us-east-1:
-      HVM64: ami-0ff8a91507f77f867
-      HVMG2: ami-0a584ac55a7631c0c
-    us-west-2:
-      HVM64: ami-a0cfeed8
-      HVMG2: ami-0e09505bc235aa82d
-    us-west-1:
-      HVM64: ami-0bdb828fd58c52235
-      HVMG2: ami-066ee5fd4a9ef77f1
-    eu-west-1:
-      HVM64: ami-047bb4163c506cd98
-      HVMG2: ami-0a7c483d527806435
-    eu-west-2:
-      HVM64: ami-f976839e
-      HVMG2: NOT_SUPPORTED
-    eu-west-3:
-      HVM64: ami-0ebc281c20e89ba4b
-      HVMG2: NOT_SUPPORTED
-    eu-central-1:
-      HVM64: ami-0233214e13e500f77
-      HVMG2: ami-06223d46a6d0661c7
-    ap-northeast-1:
-      HVM64: ami-06cd52961ce9f0d85
-      HVMG2: ami-053cdd503598e4a9d
-    ap-northeast-2:
-      HVM64: ami-0a10b2721688ce9d2
-      HVMG2: NOT_SUPPORTED
-    ap-northeast-3:
-      HVM64: ami-0d98120a9fb693f07
-      HVMG2: NOT_SUPPORTED
-    ap-southeast-1:
-      HVM64: ami-08569b978cc4dfa10
-      HVMG2: ami-0be9df32ae9f92309
-    ap-southeast-2:
-      HVM64: ami-09b42976632b27e9b
-      HVMG2: ami-0a9ce9fecc3d1daf8
-    ap-south-1:
-      HVM64: ami-0912f71e06545ad88
-      HVMG2: ami-097b15e89dbdcfcf4
-    us-east-2:
-      HVM64: ami-0b59bfac6be064b78
-      HVMG2: NOT_SUPPORTED
-    ca-central-1:
-      HVM64: ami-0b18956f
-      HVMG2: NOT_SUPPORTED
-    sa-east-1:
-      HVM64: ami-07b14488da8ea02a0
-      HVMG2: NOT_SUPPORTED
-    cn-north-1:
-      HVM64: ami-0a4eaf6c4454eda75
-      HVMG2: NOT_SUPPORTED
-    cn-northwest-1:
-      HVM64: ami-6b6a7d09
-      HVMG2: NOT_SUPPORTED
 
 Resources:
 
@@ -402,6 +142,7 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy"
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -445,44 +186,28 @@ Resources:
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M
-        Count: '1'
+        Count: !Ref DesiredCapacity # Because the Auto Scaling group’s desired capacity is set to DesiredCapacity, the signal count is set to DesiredCapacity (one for each instance).
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: '1'
-        MaxBatchSize: '1'
+        MaxBatchSize: !Ref DesiredCapacity
         PauseTime: PT15M
         WaitOnResourceSignals: 'true'
 
   LaunchConfig:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Metadata:
-      Comment: Install a simple application
+      Comment: Install some config sets
       AWS::CloudFormation::Init:
-        config:
-          packages:
-            yum:
-              ruby: []
-              git: []
-              aws-cli: []
-              httpd: []
+        configSets:
+          default:
+            - 01_setup-CfnHup
+            - 02_setup-various-tools
+            - 03_setup-apache-httpd
+            - 04_setup_amazon-codedeploy-agent
+            - 05_setup-amazon-cloudwatch-agent
+        01_setup-CfnHup:
           files:
-            /home/ec2-user/install:
-              source:
-                !Join [ "", [ "http://aws-codedeploy-", !Ref "AWS::Region",".s3.amazonaws.com/latest/install" ] ]
-              mode: '000755'
-            /home/ec2-user/.aws/config:
-              mode: '000755'
-              owner: ec2-user
-              group: root
-              content: !Sub |
-                [default]
-                region = ${AWS::Region}
-            /var/www/html/index.html:
-              content:
-                !Join [ "\n", [ "<h1>Hi There !</h1>", "<h2>Congratulations, you have successfully launched the AWS CloudFormation sample.</h2>" ] ]
-              mode: '000644'
-              owner: root
-              group: root
             /etc/cfn/cfn-hup.conf:
               content: !Sub |
                 [main]
@@ -500,11 +225,40 @@ Resources:
               mode: "000400"
               owner: "root"
               group: "root"
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        02_setup-various-tools:
+          packages:
+            yum:
+              git: []
+              # aws-cli: [] # not required for this eu-west-3 AMI
+          files:
+            /home/ec2-user/.aws/config:
+              mode: '000755'
+              owner: ec2-user
+              group: root
+              content: !Sub |
+                [default]
+                region = ${AWS::Region}
+        03_setup-apache-httpd:
+          packages:
+            yum:
+              httpd: []
+          files:
+            /var/www/html/index.html:
+              content:
+                !Join [ "\n", [ "<h1>Hi There !</h1>", "<h2>Congratulations, you have successfully launched the AWS CloudFormation sample.</h2>" ] ]
+              mode: '000644'
+              owner: root
+              group: root
           commands:
-            "00-install-agent":
-              command: "./install auto"
-              cwd: "/home/ec2-user/"
-            "00-edit-existing-html":
+            03-1-edit-existing-html:
               command: "echo \"<h2>You get response from machine $(hostname -f).</h2><br/>(Type F5 to load-balance)\" >> index.html"
               cwd: "/var/www/html/"
           services:
@@ -512,28 +266,70 @@ Resources:
               httpd:
                 enabled: 'true'
                 ensureRunning: 'true'
-              cfn-hup:
+        04_setup_amazon-codedeploy-agent:
+          packages:
+            yum:
+              ruby: []
+          files:
+            /home/ec2-user/install:
+              source:
+                !Join [ "", [ "http://aws-codedeploy-", !Ref "AWS::Region",".s3.amazonaws.com/latest/install" ] ]
+              mode: '000755'
+          commands:
+            04-1-install-agent:
+              command: "./install auto"
+              cwd: "/home/ec2-user/"
+          services:
+            sysvinit:
+              codedeploy-agent:
                 enabled: 'true'
                 ensureRunning: 'true'
-                files:
-                  - /etc/cfn/cfn-hup.conf
-                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        05_setup-amazon-cloudwatch-agent:
+          packages:
+            yum:
+              awslogs: []
+          commands:
+            05-1-edit-awslogs-agent-config:
+              command: !Sub "sed -i 's/us-east-1/${AWS::Region}/g' awscli.conf"
+              cwd: "/etc/awslogs/"
+            05-2-edit-awslogs-agent-config-to-watch-codedeploy-logs:
+              command:
+                !Sub |
+                  cat <<EOF >> awslogs.conf
+
+                  [codedeploy-agent-deployments-logs]
+                  datetime_format = %b %d %H:%M:%S
+                  file = /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log
+                  buffer_duration = 5000
+                  log_stream_name = {instance_id}
+                  initial_position = start_of_file
+                  log_group_name = codedeploy-agent-deployments-logs
+                  EOF
+              cwd: "/etc/awslogs/"
+          services:
+            sysvinit:
+              awslogsd:
+                enabled: 'true'
+                ensureRunning: 'true'
     Properties:
       KeyName: !Ref KeyName
-      ImageId: !FindInMap [AWSRegionArch2AMI, !Ref 'AWS::Region', !FindInMap [AWSInstanceType2Arch, !Ref InstanceType, Arch]]
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
       InstanceType: !Ref InstanceType
+      ImageId: !Ref AMIId
       IamInstanceProfile: !Ref EC2RoleInstanceProfile
+      SecurityGroups:
+        - !Ref SSHSecurityGroup
+        - !Ref WebSecurityGroup
       UserData:
         "Fn::Base64":
           !Sub |
             #!/bin/bash -xe
             # Get the latest CloudFormation package
-            # yum update -y
+            yum update -y
             yum install -y aws-cfn-bootstrap
             # Start cfn-init
-            /opt/aws/bin/cfn-init -s ${AWS::StackId} -r LaunchConfig --region ${AWS::Region} || error_exit 'Failed to run cfn-init'
+            /opt/aws/bin/cfn-init -s ${AWS::StackId} -r LaunchConfig --region ${AWS::Region} --configsets default || error_exit 'Failed to run cfn-init'
+            # Start up the cfn-hup daemon to listen for changes to the EC2 instance metadata
+            /opt/aws/bin/cfn-hup || error_exit 'Failed to start cfn-hup'
             # All done so signal success
             /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WebServerGroup --region ${AWS::Region}
 
@@ -553,22 +349,22 @@ Resources:
       Cooldown: '60'
       ScalingAdjustment: '-1'
 
-  # CPUAlarmHigh:
-  #   Type: 'AWS::CloudWatch::Alarm'
-  #   Properties:
-  #     AlarmDescription: Scale-up if CPU > 90% for 10 minutes
-  #     MetricName: CPUUtilization
-  #     Namespace: AWS/EC2
-  #     Statistic: Average
-  #     Period: '300'
-  #     EvaluationPeriods: '2'
-  #     Threshold: '90'
-  #     AlarmActions:
-  #       - !Ref WebServerScaleUpPolicy
-  #     Dimensions:
-  #       - Name: AutoScalingGroupName
-  #         Value: !Ref WebServerGroup
-  #     ComparisonOperator: GreaterThanThreshold
+  CPUAlarmHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '2'
+      Threshold: '90'
+      AlarmActions:
+        - !Ref WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup
+      ComparisonOperator: GreaterThanThreshold
 
   # CPUAlarmLow:
   #   Type: 'AWS::CloudWatch::Alarm'
@@ -637,19 +433,30 @@ Resources:
       Port: 80
       Protocol: HTTP
 
-  InstanceSecurityGroup:
+  WebSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable SSH access and HTTP from the load balancer only
+      GroupDescription: Allow HTTP from the load balancer only
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          SourceSecurityGroupId: !Ref PublicLoadBalancerSG
+        - IpProtocol: tcp
+          FromPort: '5000'
+          ToPort: '5000'
+          SourceSecurityGroupId: !Ref PublicLoadBalancerSG
+      VpcId: !Ref VPC
+
+  SSHSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Allow SSH remote access
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
           CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          SourceSecurityGroupId: !Ref PublicLoadBalancerSG
       VpcId: !Ref VPC
 
 Outputs:

@@ -1,3 +1,7 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Creation of a CodePipeline Configuration in AWS.
+
 Parameters:
   BranchName:
     Description: GitHub branch name
@@ -204,3 +208,9 @@ Resources:
                   - 'ecs:*'
                   - 'ssm:*'
                 Resource: '*'
+
+Outputs:
+
+  GitRepositoryUrl:
+    Description: The Git Repository Url
+    Value: !Sub "https://github.com/${GitHubOwner}/${RepositoryName}"
