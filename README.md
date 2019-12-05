@@ -30,6 +30,7 @@ You should have aws cli installed and configured with your AWS credentials on yo
         | -- packaged-s3-pipeline-parent-stack.cfn.yml          -> The result template
 
 | -- /scripts/                                                  -> The scripts for CodeDeploy phases
+        | -- basic_health_check.sh
         | -- clean_destination.sh
         | -- configure_server.sh
         | -- install_dependencies.sh
@@ -165,7 +166,7 @@ sudo service httpd restart
 
 This file details how to build the application and generate and a build artifact containing :
 
-```
+```yml
 artifacts:
   base-directory: app
   files:
@@ -193,11 +194,11 @@ These scripts are located in **/scripts/** directory.
 
   * CodeDeploy run #1:
 
-  BeforeInstall -> AfterInstall -> ApplicationStart -> ApplicationStop
+  BeforeInstall -> AfterInstall -> ApplicationStart -> ApplicationStop -> ValidateService
 
   * CodeDeploy run #2:
 
-  ApplicationStop -> BeforeInstall -> AfterInstall -> ApplicationStart
+  ApplicationStop -> BeforeInstall -> AfterInstall -> ApplicationStart -> ValidateService
 
 
   The first time, **ApplicationStop** hook doesn't run.
@@ -247,8 +248,8 @@ Make sure to Configure file **/etc/awslogs/awscli.conf** to enable CloudWatch wa
 
 To run under EC2 instance when accessed via remote SSH :
 
-```
-# AWS AMI Linux 1
+```bash
+  # AWS AMI Linux 1
   sudo service --status-all
   sudo service codedeploy-agent status
 
@@ -257,80 +258,80 @@ To run under EC2 instance when accessed via remote SSH :
   sudo service httpd restart
 ```
 
-```
-# AWS AMI Linux 2
-sudo systemctl
-sudo systemctl status codedeploy-agent
-sudo systemctl status httpd
+```bash
+  # AWS AMI Linux 2
+  sudo systemctl
+  sudo systemctl status codedeploy-agent
+  sudo systemctl status httpd
 
-sudo systemctl stop httpd.service
-sudo systemctl start httpd.service
-sudo systemctl restart httpd.service
-```
-
-```
-# Show and kill process
-pstree
-sudo ps aux | grep dotnet
-
-killall -KILL dotnet
-pkill dotnet
+  sudo systemctl stop httpd.service
+  sudo systemctl start httpd.service
+  sudo systemctl restart httpd.service
 ```
 
-```
-# Find out which port number a process is listening on
-sudo netstat -ltnp
-sudo netstat -ltnp | grep dotnet
+```bash
+  # Show and kill process
+  pstree
+  sudo ps aux | grep dotnet
+
+  killall -KILL dotnet
+  pkill dotnet
 ```
 
-```
-# Show reverse-proxy configuration
-cat /etc/httpd/conf.d/default-site.conf
-```
-
-```
-# Show cloud init logs
-cat /var/log/cfn-init.log
-
-cat /var/log/cloud-init.log
-cat /var/log/cloud-init-output.log
+```bash
+  # Find out which port number a process is listening on
+  sudo netstat -ltnp
+  sudo netstat -ltnp | grep dotnet
 ```
 
-```
-# Show CodeDeploy logs
-cat /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log
-
-# Show CodeDeploy Agent Log
-cat /var/log/aws/codedeploy-agent/codedeploy-agent.log
+```bash
+  # Show reverse-proxy configuration
+  cat /etc/httpd/conf.d/default-site.conf
 ```
 
-```
-# Setup CloudWatch Agent manually
-# EC2 requires having IAM Role with CloudWatch Write Permissions.
-# https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html
+```bash
+  # Show cloud init logs
+  cat /var/log/cfn-init.log
 
-yum update -y
-sudo yum install -y awslogs
-
-# edit file to with your region. Below, default get replaced with eu-west-3.
-sed -i 's/us-east-1/eu-west-3/g' /etc/awslogs/awscli.conf
-
-sudo systemctl start awslogsd
-sudo systemctl enable awslogsd.service
-
-sudo systemctl status awslogsd
+  cat /var/log/cloud-init.log
+  cat /var/log/cloud-init-output.log
 ```
 
-```
-# Show CloudWatch Agent config and specify files to watch.
-cat /etc/awslogs/awslogs.conf
+```bash
+  # Show CodeDeploy logs
+  cat /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log
+
+  # Show CodeDeploy Agent Log
+  cat /var/log/aws/codedeploy-agent/codedeploy-agent.log
 ```
 
+```bash
+  # Setup CloudWatch Agent manually
+  # EC2 requires having IAM Role with CloudWatch Write Permissions.
+  # https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html
+
+  yum update -y
+  sudo yum install -y awslogs
+
+  # edit file to with your region. Below, default get replaced with eu-west-3.
+  sed -i 's/us-east-1/eu-west-3/g' /etc/awslogs/awscli.conf
+
+  sudo systemctl start awslogsd
+  sudo systemctl enable awslogsd.service
+
+  sudo systemctl status awslogsd
 ```
+
+```bash
+  # Show CloudWatch Agent config and specify files to watch.
+  cat /etc/awslogs/awslogs.conf
+```
+
+```bash
 # Various commands
-dotnet
-aws
-git
+  dotnet
+  aws
+  git
 ```
 
 For security reason, **you should NOT USE aws cli with any personal AWS credentials on the EC2 instances**. <br/>
