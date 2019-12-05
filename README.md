@@ -147,7 +147,7 @@ It will be submitted to the reverse proxy which redirects to the website made av
 
 - people can reach it publicly via an external url on port **80**.
 
-3. Likewise, a Security Group rule is configured on the ASG EC2 instances to allow:
+3. Likewise, Security Groups are configured on the ASG EC2 instances to allow:
 
 - inbound HTTP requests from the ALB to the EC2 instances' port **80** (for the default html sample page deployed in **/var/www/html** with Apache httpd).
 - incoming HTTP requests from ALB to the EC2 instances port **5000** (added to reach **.Net Core Website**).
@@ -233,6 +233,7 @@ In Cloud Formation init section, see **05_setup-amazon-cloudwatch-agent**.
 
 Make sure to Configure file **/etc/awslogs/awscli.conf** to enable CloudWatch watching CodeDeploy deployment logfiles.
 
+Logs group name chosen for CodeDeploy is: **codedeploy-agent-deployments-logs**.
 
 :information_source: Logs in AWS Cloudwatch Console
 <details>

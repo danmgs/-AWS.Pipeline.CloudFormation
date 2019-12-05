@@ -36,7 +36,7 @@ namespace app.Controllers
 
         public IActionResult Health()
         {
-            return Ok();
+            return View();
         }
     }
 }

@@ -2,7 +2,7 @@
 
 for i in `seq 1 10`;
 do
-  HTTP_CODE=`curl -s -o /dev/null -I -w '%{http_code}' http://localhost/Home/Health:80`
+  HTTP_CODE=`curl -s -o /dev/null -I -w '%{http_code}' http://localhost/Home/Health`
   if [ "$HTTP_CODE" == "200" ]; then
     echo "Successfully pulled page."
     exit 0;
