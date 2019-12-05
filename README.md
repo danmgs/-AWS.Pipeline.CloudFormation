@@ -128,6 +128,8 @@ EC2 instances will be provided with :
 
 ### Security Configuration
 
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/SecurityGroups.svg)
+
 1. A reverse proxy is configured via the script file **/scripts/configure_server.sh**
 
 The users's requests are coming to the Application Load Balancer (ALB) on port **80**.
