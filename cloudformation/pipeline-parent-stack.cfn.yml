@@ -8,6 +8,7 @@
 # - Creation of a CodeDeploy Project Configuration in AWS.
 # - Creation of a CodeBuild Project Configuration in AWS.
 # - Creation of a CodePipeline Configuration in AWS.
+# - Creation of a table in dynamodb in AWS for the website.
 #
 ################################################################################
 

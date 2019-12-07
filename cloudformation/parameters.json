@@ -29,7 +29,7 @@
   },
   {
     "ParameterKey": "KeyName",
-    "ParameterValue": "EC2 Tutorial"
+    "ParameterValue": "YOUR_KEYNAME"
   },
   {
     "ParameterKey": "SSHLocation",

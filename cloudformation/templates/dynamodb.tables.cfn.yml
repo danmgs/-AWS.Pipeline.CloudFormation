@@ -3,7 +3,7 @@
 # Cloud formation child template
 # Author: NGUYEN Daniel
 #
-# - Creation of a table in dynamodb in AWS
+# - Creation of a table in dynamodb in AWS for the website.
 #
 ################################################################################
 
