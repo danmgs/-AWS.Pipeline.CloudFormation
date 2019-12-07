@@ -12,9 +12,15 @@ These templates will setup an insfrastructure and a CI/CD pipeline :
 
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website1.PNG)
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website2.PNG)
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website3.PNG)
+<details>
+  <summary>Click to expand</summary>
+
+  ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website2.PNG)
+
+  ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website3.PNG)
+</details>
+
 
 ## Prerequisites
 
