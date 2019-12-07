@@ -3,16 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using app.DAL.Managers;
+using app.Models;
+using log4net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace app
+namespace app.Web
 {
     public class Startup
     {
+        static readonly ILog _log = LogManager.GetLogger(typeof(Startup));
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -24,14 +30,17 @@ namespace app
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            services.AddTransient(typeof(IDBManager<>), typeof(DynamoDBManager<>));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
+            loggerFactory.AddLog4Net();
+
             var cwd = Directory.GetCurrentDirectory();
-            Console.WriteLine(" *** Current working directory should contain wwwroot to server static files ***");
-            Console.WriteLine($"Current working directory : {cwd}");
+            _log.Info(" *** Current working directory should contain wwwroot to server static files ***");
+            _log.Info($"Current working directory : {cwd}");
             
 
             if (env.IsDevelopment())

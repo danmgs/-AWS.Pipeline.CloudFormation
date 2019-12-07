@@ -191,6 +191,33 @@ Parameters:
     Type: String
     NoEcho: true
 
+  # dynamodb.tables.cfn.yml specific parameters
+
+  TableName:
+    Description: The DynamoDB Table Name
+    Type: String
+    MinLength: '1'
+    Default: 'Users'
+    ConstraintDescription: must be a valid name
+  BillingMode:
+      Description: The Billing Mode
+      Default: PROVISIONED
+      Type: String
+      AllowedValues:
+      - PROVISIONED
+      - PAY_PER_REQUEST
+  ReadCapacityUnits:
+    Description: The Read Capacity Units (RCU)
+    Type: Number
+    Default: 5
+    ConstraintDescription: must be a valid number
+  WriteCapacityUnits:
+    Description: The Write Capacity Units (WCU)
+    Type: Number
+    Default: 5
+    ConstraintDescription: must be a valid number
+
+
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -246,6 +273,15 @@ Metadata:
           - GitHubOwner
           - GitHubSecret
           - GitHubOAuthToken
+      -
+        Label:
+          default: "DynamoDB Specific Configuration"
+        Parameters:
+          - TableName
+          - BillingMode
+          - ReadCapacityUnits
+          - WriteCapacityUnits
+
 
 Resources:
 
@@ -325,6 +361,21 @@ Resources:
       TimeoutInMinutes: 15
     DependsOn: [ CodeDeployStack, CodeBuildStack ]
 
+  DynamoDBStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: templates/codepipeline-github-events.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/666xxxxx.template
+      Parameters:
+        ApplicationName: !GetAtt CodeDeployStack.Outputs.CodeDeployApplicationName
+        EnvironmentName: !Ref EnvironmentName
+        TableName: !Ref TableName
+        BillingMode: !Ref BillingMode
+        ReadCapacityUnits: !Ref ReadCapacityUnits
+        WriteCapacityUnits: !Ref WriteCapacityUnits
+      TimeoutInMinutes: 15
+    DependsOn: [ CodeDeployStack ]
+
+
 Outputs:
 
   ExternalUrl:
@@ -359,3 +410,6 @@ Outputs:
 
   CodePipelineStackName:
     Value: !Ref CodePipelineStack
+
+  DynamoDBStackName:
+    Value: !Ref DynamoDBStack

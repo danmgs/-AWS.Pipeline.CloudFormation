@@ -8,7 +8,7 @@ These templates will setup an insfrastructure and a CI/CD pipeline :
 - creation of a CodeDeploy Project Configuration
 - creation of a CodeBuild Project Configuration
 - creation of a CodePipeline Configuration
-- Deployment of a Website in .Net Core 3.0.
+- deployment of a Website in .Net Core 3.0.
 
 ## Prerequisites
 

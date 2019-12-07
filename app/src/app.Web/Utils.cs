@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace app
+namespace app.Web
 {
     public static class Utils
     {

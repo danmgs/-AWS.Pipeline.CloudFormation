@@ -16,13 +16,13 @@ phases:
   pre_build:
     commands:
       - echo Clean and restore dotnet project
-      - cd ./app/src
+      - cd ./app/src/app.Web
       - dotnet clean
       - dotnet restore
   build:
     commands:
       - echo Build started on `date`
-      - dotnet publish -c Release -o ../output
+      - dotnet publish -c Release -o ../../output
   post_build:
     commands:
       - echo Build completed on `date`

@@ -6,5 +6,5 @@
 cd /usr/app
 
 # run in background
-echo "- start application dotnet /usr/app/app.dll"
+echo "- start application dotnet /usr/app/app.Web.dll"
 nohup dotnet /usr/app/app.dll --urls "http://*:5000" &>/dev/null &

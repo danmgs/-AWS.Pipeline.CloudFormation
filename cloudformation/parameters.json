@@ -110,5 +110,21 @@
   {
     "ParameterKey": "GitHubOAuthToken",
     "ParameterValue": "YOUR_GITHUB_OAUTH_TOKEN"
+  },
+  {
+    "ParameterKey": "TableName",
+    "ParameterValue": "Users"
+  },
+  {
+    "ParameterKey": "BillingMode",
+    "ParameterValue": "PROVISIONED"
+  },
+  {
+    "ParameterKey": "ReadCapacityUnits",
+    "ParameterValue": "5"
+  },
+  {
+    "ParameterKey": "WriteCapacityUnits",
+    "ParameterValue": "5"
   }
 ]
