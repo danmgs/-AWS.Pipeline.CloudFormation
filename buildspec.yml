@@ -26,7 +26,7 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-      - cd ..
+      - cd ../..
       - ls
       - ls output
 # Include only the files required for your application to run.

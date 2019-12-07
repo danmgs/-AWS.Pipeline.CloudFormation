@@ -289,7 +289,7 @@ Resources:
   VPCNetworkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/vpc.network.cfn.yml # https://s3.YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/111xxxxx.template
+      TemplateURL: templates/vpc.network.cfn.yml # https://s3.YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/xxxxxxxx.template
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         AvailabilityZone1: !Ref AvailabilityZone1
@@ -299,7 +299,7 @@ Resources:
   AutoScalingGroupWithALBStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/autoscalinggroup.alb.cfn.yml # https://s3.YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/222xxxxx.template
+      TemplateURL: templates/autoscalinggroup.alb.cfn.yml # https://s3.YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/xxxxxxxx.template
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         InstanceType: !Ref InstanceType
@@ -319,7 +319,7 @@ Resources:
   CodeBuildStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/codebuild.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/444xxxxx.template
+      TemplateURL: templates/codebuild.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/xxxxxxxx.template
       Parameters:
         ApplicationName: !Ref ApplicationName
         CodeBuildImage: !Ref CodeBuildImage
@@ -336,7 +336,7 @@ Resources:
   CodeDeployStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/codedeploy.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/333xxxxx.template
+      TemplateURL: templates/codedeploy.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/xxxxxxxx.template
       Parameters:
         EnvironmentName: !Ref EnvironmentName
         CodeDeployApplicationName: !Ref ApplicationName
@@ -350,7 +350,7 @@ Resources:
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/codepipeline-github-events.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/555xxxxx.template
+      TemplateURL: templates/codepipeline-github-events.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/xxxxxxxx.template
       Parameters:
         BranchName: !Ref BranchName
         RepositoryName: !Ref RepositoryName
@@ -365,16 +365,15 @@ Resources:
   DynamoDBStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: templates/codepipeline-github-events.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/666xxxxx.template
+      TemplateURL: templates/dynamodb.tables.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/xxxxxxxx.template
       Parameters:
-        ApplicationName: !GetAtt CodeDeployStack.Outputs.CodeDeployApplicationName
+        ApplicationName: !Ref ApplicationName
         EnvironmentName: !Ref EnvironmentName
         TableName: !Ref TableName
         BillingMode: !Ref BillingMode
         ReadCapacityUnits: !Ref ReadCapacityUnits
         WriteCapacityUnits: !Ref WriteCapacityUnits
       TimeoutInMinutes: 15
-    DependsOn: [ CodeDeployStack ]
 
 
 Outputs:
