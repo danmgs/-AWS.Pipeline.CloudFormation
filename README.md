@@ -8,7 +8,13 @@ These templates will setup an insfrastructure and a CI/CD pipeline :
 - creation of a CodeDeploy Project Configuration
 - creation of a CodeBuild Project Configuration
 - creation of a CodePipeline Configuration
-- deployment of a Website in .Net Core 3.0.
+- deployment of a Website in .Net Core 3.0 with users management feature.
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website1.PNG)
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website2.PNG)
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website3.PNG)
 
 ## Prerequisites
 
@@ -228,12 +234,14 @@ In Cloud Formation init section, see config step **04_setup_amazon-codedeploy-ag
 
 ### Setup CloudWatch Logs Agent
 
+This allows to diagnose any Deployment issue.
+
 Refer template **autoscalinggroup.alb.cfn.yml**.<br/>
 In Cloud Formation init section, see **05_setup-amazon-cloudwatch-agent**.
 
 Make sure to Configure file **/etc/awslogs/awscli.conf** to enable CloudWatch watching CodeDeploy deployment logfiles.
 
-Logs group name chosen for CodeDeploy is: **codedeploy-agent-deployments-logs**.
+LogGroup name chosen for CodeDeploy is: **codedeploy-agent-deployments-logs**.
 
 :information_source: Logs in AWS Cloudwatch Console
 <details>

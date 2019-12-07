@@ -332,3 +332,4 @@ ASALocalRun/
 # Custom
 .vscode/settings.json
 cloudformation/packaged*.yml
+*.log

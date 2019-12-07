@@ -110,14 +110,16 @@ namespace app.DAL.Managers
 
         public void Dispose()
         {
+            if(_context != null)
+                _context.Dispose();
+
             if (_client != null)
                 _client = null;
         }
 
         #region Private methods
 
-        static void PrintItem(
-            Dictionary<string, AttributeValue> attributeList)
+        static void PrintItem(Dictionary<string, AttributeValue> attributeList)
         {
             foreach (KeyValuePair<string, AttributeValue> kvp in attributeList)
             {
@@ -136,6 +138,5 @@ namespace app.DAL.Managers
         }
 
         #endregion
-
     }
 }

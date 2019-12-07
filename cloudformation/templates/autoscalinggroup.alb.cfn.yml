@@ -151,6 +151,10 @@ Resources:
             - ec2.amazonaws.com
           Action:
           - sts:AssumeRole
+        - Effect: Allow
+          Action:
+            - 'dynamodb:*'
+          Resource: '*'
 
   NotificationTopic:
     Type: 'AWS::SNS::Topic'
