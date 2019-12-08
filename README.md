@@ -10,24 +10,12 @@ These templates will setup an insfrastructure and a CI/CD pipeline :
 - creation of a CodePipeline Configuration
 - deployment of a Website in .Net Core 3.0 with users management feature.
 
-<br/>
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website1.PNG)
-
-<details>
-  <summary>Click to expand</summary>
-
-  ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website2.PNG)
-
-  ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website3.PNG)
-</details>
-
-
-## Prerequisites
+## 1. Prerequisites
 
 You should have aws cli installed and configured with your AWS credentials on your computer.
 
-## Folder Organization
+## 2. Folder organization
 
 ```
 | -- /cloudformation/
@@ -57,7 +45,7 @@ You should have aws cli installed and configured with your AWS credentials on yo
 
 ```
 
-## Getting started
+## 3. Getting started
 
 
 You can run each scripts in the **/cloudformation/templates** directory one by one, they are dependent of each other, in this order:
@@ -127,9 +115,9 @@ For instance, this template is named by default **packaged-s3-pipeline-parent-st
 
 - Alternatively, for manual deployment, you can use generated **packaged-s3-pipeline-parent-stack.cfn.yml** by uploading it in AWS CloudFormation Console.
 
-## Walkthrough - Infrastructure and architecture
+## 4. Walkthrough - Architecture
 
-### Infrastructure
+### 4.1. Infrastructure
 
 The Cloud Formation templates generate an AutoScalingGroup (ASG) with 2 EC2 instances spread across 2 AZs in public subnets of the same VPC. An Application LoadBalancer is setup in front to present the Website to public users.
 
@@ -139,18 +127,20 @@ EC2 instances will be provided with :
 
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Custom.svg)
 
-EC2 are configured with a IAM Role having following policies (AWS managed policy or custom ones):
+EC2 are configured with a IAM Role having following policies (AWS managed policies or custom inline policies):
 
 - AmazonEC2RoleforAWSCodeDeploy for the S3 Read access permissions
-- CloudWatchAgentServerPolicy for EC2 / CloudWatch R+W permissions (required when **Setup CloudWatch Logs Agent** - refer section)
+- CloudWatchAgentServerPolicy for EC2 / CloudWatch R+W permissions (required when **Setup CloudWatch Logs Agent**, refer section **6.2.**)
 - DynamoDB R+W permissions for actions on the users management page on website.
 
 
-### Security Configuration
+### 4.2. Security
 
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/SecurityGroups.svg)
 
-1. A reverse proxy is configured via the script file **/scripts/configure_server.sh**
+#### 4.2.1. Proxy Web configuration
+
+A reverse proxy is configured via the script file **/scripts/configure_server.sh**
 
 The users's requests are coming to the Application Load Balancer (ALB) on port **80**.
 It will be submitted to the reverse proxy which redirects to the website made available on port **5000**. Thanks to this rule:
@@ -163,28 +153,48 @@ It will be submitted to the reverse proxy which redirects to the website made av
 </VirtualHost>
 ```
 
-2. A Security Group rule allowing inbound traffic is configured for the ALB :
+#### 4.2.3 Security groups configuration
+
+A security group rule allowing inbound traffic is configured at the ALB level:
 
 - people can reach it publicly via an external url on port **80**.
 
-3. Likewise, Security Groups are configured on the ASG EC2 instances to allow:
+Likewise, security groups are configured on the ASG EC2 instances to allow:
 
 - inbound HTTP requests from the ALB to the EC2 instances' port **80** (for the default html sample page deployed in **/var/www/html** with Apache httpd).
 - incoming HTTP requests from ALB to the EC2 instances port **5000** (added to reach **.Net Core Website**).
 
 - remote SSH Access on port **22** for convenience.
 
-Note that in case you add new security rules further, you may need to restart the httpd service on the EC2 instances:
+#### 4.2.4. Anti-forgery tokens (to avoid CSRF)
 
-```
-sudo service httpd restart
+When we operate Create/Edit/Delete users operations on the website, we submit POST requests that are checked against CSRF thanks to anti-forgery tokens.<br/>
+At first, they will fail as EC2 instances are behind a load-balancer :
+because the GET request to fetch the form and my POST request to submit the form can potentially be served by different EC2 web servers.
+
+Thus, EC2s need to share anti-forgery tokens, to do so:
+
+A share location is created during the deployment phase on EC2 instances:
+
+```bash
+/etc/keys/app
 ```
 
-## Walkthrough - Build and deploy
+This is configured like so in the .NET website application :
+
+```csharp
+  var dirTokensPath = Configuration.GetValue<string>("AntiforgeryTokensPath");
+  services.AddDataProtection()
+      .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
+```
+
+## 5. Walkthrough - Build and deploy
 
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram.svg)
 
-1. **buildspec.yml** is used by AWS CodeBuild.
+### 5.1. CodeBuild configuration
+
+The file **buildspec.yml** is used by AWS CodeBuild.
 
 This file details how to build the application and generate and a build artifact containing :
 
@@ -199,8 +209,9 @@ artifacts:
 
 This artifact is composed of the application ready to deploy and an **appspec.yml** file for AWS CodeDeploy.
 
+### 5.2. CodeDeploy configuration
 
-2. [**appspec.yml**](https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html) is used by CodeDeploy.
+The file [**appspec.yml**](https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html) is used by CodeDeploy.
 
 This file must be placed in the root of the build output artifact.
 
@@ -212,7 +223,7 @@ These scripts are located in **/scripts/** directory.
 
 :information_source: Deployments details
 <details>
-  <summary>Click to expand</summary>
+  <summary>Click to expand details</summary>
 
   * CodeDeploy run #1:
 
@@ -231,35 +242,54 @@ These scripts are located in **/scripts/** directory.
 </details>
 <br/>
 
+### 5.3. CodePipeline configuration
 
-3. AWS CodePipeline orchestrates the Build and Deploy.
+CodePipeline orchestrates the Build and Deploy.
 
 Each commit will trigger automatically:
 - a build in CodeBuild
 - the generation of a an artifact to be deployed by CodeDeploy
 - deployment of the website by CodeDeploy
 
-## Walkthrough - Setup of AWS Agents
+## 6. Walkthrough - Setup of AWS Agents
 
-### Setup CodeDeploy Agent
+### 6.1. Setup CodeDeploy Agent
 
 Refer template **autoscalinggroup.alb.cfn.yml**.<br/>
 In Cloud Formation init section, see config step **04_setup_amazon-codedeploy-agent**.
 
-### Setup CloudWatch Logs Agent
+### 6.2. Setup CloudWatch Logs Agent
 
 This allows to diagnose any Deployment issue.
 
 Refer template **autoscalinggroup.alb.cfn.yml**.<br/>
 In Cloud Formation init section, see **05_setup-amazon-cloudwatch-agent**.
 
-Make sure to Configure file **/etc/awslogs/awscli.conf** to enable CloudWatch watching CodeDeploy deployment logfiles.
+To enable CloudWatch watching CodeDeploy deployment logfiles, make sure to Configure file **/etc/awslogs/awscli.conf** :
+
+```yml
+[/var/log/messages]
+datetime_format = %b %d %H:%M:%S
+file = /var/log/messages
+buffer_duration = 5000
+log_stream_name = {instance_id}
+initial_position = start_of_file
+log_group_name = /var/log/messages
+
+[codedeploy-agent-deployments-logs]
+datetime_format = %b %d %H:%M:%S
+file = /opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log
+buffer_duration = 5000
+log_stream_name = {instance_id}
+initial_position = start_of_file
+log_group_name = codedeploy-agent-deployments-logs
+```
 
 LogGroup name chosen for CodeDeploy is: **codedeploy-agent-deployments-logs**.
 
 :information_source: Logs in AWS Cloudwatch Console
 <details>
-  <summary>Click to expand</summary>
+  <summary>Click to expand details</summary>
 
   ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CloudwatchLogs1.PNG)
 
@@ -268,8 +298,46 @@ LogGroup name chosen for CodeDeploy is: **codedeploy-agent-deployments-logs**.
   ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CloudwatchLogs3.PNG)
 </details>
 
+## 7. Walkthrough - The Website
 
-## Some useful commands
+- The website is a ASP.NET CORE 3.0 MVC application.
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website1.PNG)
+
+- It runs on port 5000, as specified inside the deployment scripts :
+
+```bash
+scripts/start_application.sh
+```
+- It is made reachable on port 80 though the ALB url, as it relies on Apache httpd server which acts as reverse-proxy (refer section **4.2.1.**).
+
+- It has a user management feature and these users are stored in a DynamoDB table.
+
+<details>
+  <summary>Click to expand details</summary>
+
+  ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website2.PNG)
+
+  ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website3.PNG)
+</details>
+
+Binaries are deployed on EC2 instances in this location:
+
+```bash
+/usr/app/
+```
+
+Output logs are on EC2 instances in this location:
+
+```bash
+/usr/app/logs
+```
+
+A possible enhancement is to configure these logs to be poured into CloudWatch under a new log group (refer section **6.2.**).
+
+## 8. Annex
+
+### 8.1. Some useful commands
 
 To run under EC2 instance when accessed via remote SSH :
 

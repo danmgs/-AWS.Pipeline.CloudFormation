@@ -139,9 +139,6 @@ Resources:
     Properties:
       # RoleName: !Sub "${AWS::StackName}-EC2RoleforAWSCodeDeploy" # runs into errors if too long > 64 chars. let AWS generate the role
       Path: "/"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy"
-        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -151,10 +148,18 @@ Resources:
             - ec2.amazonaws.com
           Action:
           - sts:AssumeRole
-        - Effect: Allow
-          Action:
-            - 'dynamodb:*'
-          Resource: '*'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy"
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+      Policies:
+        - PolicyName: my-custom-policies # create a custom inline policies
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dynamodb:*'
+                Resource: '*'
 
   NotificationTopic:
     Type: 'AWS::SNS::Topic'

@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 
 namespace app.Web
 {
@@ -33,12 +34,39 @@ namespace app.Web
             services.AddControllersWithViews();
             services.AddTransient(typeof(IDBManager<>), typeof(DynamoDBManager<>));
 
-            // To share antiforgery tokens, we set up the Data Protection service with a shared location.
-            // https://stackoverflow.com/questions/43860631/how-do-i-handle-validateantiforgerytoken-across-linux-servers
+            InitAddDataProtection(services);
+        }
 
-            var dirTokensPath = Configuration.GetValue<string>("AntiforgeryTokensPath");
-            services.AddDataProtection()
-                .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
+        /// <summary>
+        /// To share antiforgery tokens, we set up the Data Protection service with a shared location.
+        /// It could be a shared directory, a Redis cache ..
+        /// https://stackoverflow.com/questions/43860631/how-do-i-handle-validateantiforgerytoken-across-linux-servers
+        /// </summary>
+        /// <param name="services"></param>
+        void InitAddDataProtection(IServiceCollection services)
+        {
+            /*** Shared Directory by EC2 instances ***/
+            //var dirTokensPath = Configuration.GetValue<string>("AntiforgeryTokensPath");
+            //services.AddDataProtection()
+            //    .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
+
+            /*** Shared Redis Cache ***/
+            var redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
+
+            try
+            {
+                var redis = ConnectionMultiplexer.Connect(redisUrl);
+                services.AddDataProtection()
+                    .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys");
+            }
+            catch (RedisConnectionException ex)
+            {
+                _log.Error($"Could not connect to Redis : {redisUrl}", ex);
+            }
+            catch (Exception ex)
+            {
+                _log.Error($"Could not connect to Redis : {redisUrl}", ex);
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
