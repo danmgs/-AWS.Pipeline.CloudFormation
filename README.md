@@ -5,6 +5,7 @@ A project to demo AWS CodePipeline with Cloud Formation templates.
 These templates will setup an insfrastructure and a CI/CD pipeline :
 - creation of a network with VPC and subnets.
 - creation of an AutoScaling Group (ASG) with an Application Load Balancer (ALB)
+- creation of an Elastic Cache in AWS.
 - creation of a CodeDeploy Project Configuration
 - creation of a CodeBuild Project Configuration
 - creation of a CodePipeline Configuration
@@ -18,6 +19,27 @@ You should have aws cli installed and configured with your AWS credentials on yo
 ## 2. Folder organization
 
 ```
+|
+| -- /app/
+        |
+        |
+        | -- appspec.yml                                        -> The spec for CodeDeploy
+        |
+        | -- /src/                                              -> The website source code to deploy
+                | -- /app.DAL/
+                | -- /app.Models/
+                | -- /app.Web/
+                | -- app.sln
+        |
+        | -- /scripts/                                          -> The scripts for CodeDeploy phases
+                | -- basic_health_check.sh
+                | -- clean_destination.sh
+                | -- configure_server.sh
+                | -- install_dependencies.sh
+                | -- start_application.sh
+                | -- start_server.sh
+                | -- stop_server.sh
+
 | -- /cloudformation/
         |
         | -- /templates/                                        -> The nested templates
@@ -30,18 +52,8 @@ You should have aws cli installed and configured with your AWS credentials on yo
         | -- aws-cli-deploy.bat                                 -> The project launcher
         | -- packaged-s3-pipeline-parent-stack.cfn.yml          -> The result template
 
-| -- /scripts/                                                  -> The scripts for CodeDeploy phases
-        | -- basic_health_check.sh
-        | -- clean_destination.sh
-        | -- configure_server.sh
-        | -- install_dependencies.sh
-        | -- start_application.sh
-        | -- start_server.sh
-        | -- stop_server.sh
-|
-| -- appspec.yml                                                -> The spec for CodeDeploy
+
 | -- buildspec.yml                                              -> The spec for CodeBuild
-| -- index.html                                                 -> The Website Source
 
 ```
 
@@ -55,9 +67,11 @@ You can run each scripts in the **/cloudformation/templates** directory one by o
 | --- | ----------------------------------- | --------------------------------------------------------------------- |
 |  1  | vpc.network.cfn.yml                 | creation of a network with VPC and subnets                            |
 |  2  | autoscalinggroup.alb.cfn.yml        | creation of an ASG with an ALB                                        |
-|  3  | codebuild.cfn.yml                   | creation of a CodeBuild Project Configuration                         |
-|  4  | codedeploy.cfn.yml                  | creation of a CodeDeploy Project Configuration                        |
-|  5  | codepipeline-github-events.cfn.yml  | creation of a CodePipeline Configuration                              |
+|  3  | autoscalinggroup.alb.cfn.yml        | creation of an ASG with an ALB                                        |
+|  4  | codebuild.cfn.yml                   | creation of a CodeBuild Project Configuration                         |
+|  5  | codedeploy.cfn.yml                  | creation of a CodeDeploy Project Configuration                        |
+|  6  | codepipeline-github-events.cfn.yml  | creation of a CodePipeline Configuration                              |
+|  7  | dynamodb.tables.cfn.yml             | Creation of a table in dynamodb in AWS for the website                |
 
 
 A better way is to run the custom **aws-cli-deploy.bat** to create the full stack in one shot.
@@ -166,26 +180,47 @@ Likewise, security groups are configured on the ASG EC2 instances to allow:
 
 - remote SSH Access on port **22** for convenience.
 
-#### 4.2.4. Anti-forgery tokens (to avoid CSRF)
+#### 4.2.4. Anti-forgery tokens configuration
 
-When we operate Create/Edit/Delete users operations on the website, we submit POST requests that are checked against CSRF thanks to anti-forgery tokens.<br/>
-At first, they will fail as EC2 instances are behind a load-balancer :
-because the GET request to fetch the form and my POST request to submit the form can potentially be served by different EC2 web servers.
+When we operate Create / Edit / Delete operations on the website, we submit POST requests that are checked against CSRF thanks to anti-forgery tokens.
 
-Thus, EC2s need to share anti-forgery tokens, to do so:
+Of course, there is no use to configure anti-forgery token storage when running on 1 server (dev or debug purposes..).<br/>
+But failures start to happen when there are more than one EC2 instance served behind a load-balancer, as EC2s instances store **different** anti-forgery tokens.
 
-A share location is created during the deployment phase on EC2 instances:
+Any GET request to fetch the form and the POST request to submit the form can be served by different EC2 web servers, thus failing the validation of token.
 
-```bash
-/etc/keys/app
+<details>
+  <summary>Click to expand details</summary>
 ```
+ERROR Microsoft.AspNetCore.Antiforgery.DefaultAntiforgery - An exception was thrown while deserializing the token.
+Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException: The antiforgery token could not be decrypted.
+ ---> System.Security.Cryptography.CryptographicException: The key {37e12dbc-e903-4ab8-895c-77f34f28211a} was not found in the key ring.
+   at Microsoft.AspNetCore.DataProtection.KeyManagement.KeyRingBasedDataProtector.UnprotectCore(Byte[] protectedData, Boolean allowOperationsOnRevokedKeys, UnprotectStatus& status)
+   at Microsoft.AspNetCore.DataProtection.KeyManagement.KeyRingBasedDataProtector.DangerousUnprotect(Byte[] protectedData, Boolean ignoreRevocationErrors, Boolean& requiresMigration, Boolean& wasRevoked)
+   at Microsoft.AspNetCore.DataProtection.KeyManagement.KeyRingBasedDataProtector.Unprotect(Byte[] protectedData)
+   at Microsoft.AspNetCore.Antiforgery.DefaultAntiforgeryTokenSerializer.Deserialize(String serializedToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Antiforgery.DefaultAntiforgeryTokenSerializer.Deserialize(String serializedToken)
+   at Microsoft.AspNetCore.Antiforgery.DefaultAntiforgery.GetCookieTokenDoesNotThrow(HttpContext httpContext)
+```
+</details>
+
+<br/>
+
+As a solution, EC2s need to **share** anti-forgery tokens. There are different [ways](https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis) to store tokens.
+
+We use Redis (AWS Elastic Cache Service) for this shared storage.
 
 This is configured like so in the .NET website application :
 
 ```csharp
-  var dirTokensPath = Configuration.GetValue<string>("AntiforgeryTokensPath");
+  /*** Shared Redis Cache ***/
+  _redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
+
+  _redis = ConnectionMultiplexer.Connect(_redisUrl);
+  _log.Info($"Connected to Redis : {_redisUrl}");
   services.AddDataProtection()
-      .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
+              .PersistKeysToStackExchangeRedis(_redis, "DataProtection-Keys");
 ```
 
 ## 5. Walkthrough - Build and deploy

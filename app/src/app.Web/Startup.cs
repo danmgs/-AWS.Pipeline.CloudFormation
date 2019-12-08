@@ -44,11 +44,13 @@ namespace app.Web
         /// To share antiforgery tokens, we set up the Data Protection service with a shared location.
         /// It could be a shared directory, a Redis cache ..
         /// https://stackoverflow.com/questions/43860631/how-do-i-handle-validateantiforgerytoken-across-linux-servers
+        /// https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis
         /// </summary>
         /// <param name="services"></param>
         void InitAddDataProtection(IServiceCollection services)
         {
             /*** Shared Directory by EC2 instances ***/
+
             //var dirTokensPath = Configuration.GetValue<string>("AntiforgeryTokensPath");
             //services.AddDataProtection()
             //    .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
@@ -66,10 +68,25 @@ namespace app.Web
             }
             catch (RedisConnectionException ex)
             {
+                _log.Error($"Not connected to Redis on '{_redisUrl}' !", ex);
             }
             catch (Exception ex)
             {
+                _log.Error($"Not connected to Redis on '{_redisUrl}' !", ex);
             }
+        }
+
+        void LoggingStuffAfterInitLog4Net()
+        {
+            string cwd = Directory.GetCurrentDirectory();
+            _log.Info($" *** Current working directory '{cwd}' should contain wwwroot to server static files ***");
+            if (!Directory.Exists(Path.Combine(cwd, "wwwroot")))
+                _log.Error($"wwwroot not found in current directory '{cwd}'");
+
+            if (_redis != null)
+                _log.Info($"Redis connection on '{_redisUrl}'. Status is : {_redis.IsConnected} | {_redis.GetStatus()}");
+            else
+                _log.Error($"Not connected to Redis on '{_redisUrl}' !");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,12 +94,7 @@ namespace app.Web
         {
             loggerFactory.AddLog4Net();
 
-            var cwd = Directory.GetCurrentDirectory();
-            _log.Info(" *** Current working directory should contain wwwroot to server static files ***");
-            _log.Info($"Current working directory : {cwd}");
-
-            _log.Info($"Redis url to connect is : {_redisUrl}");
-            _log.Info($"Redis connection status is : {_redis?.IsConnected} | {_redis?.GetStatus()}");
+            LoggingStuffAfterInitLog4Net();
 
             if (env.IsDevelopment())
             {

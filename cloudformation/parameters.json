@@ -48,6 +48,26 @@
     "ParameterValue": "3"
   },
   {
+    "ParameterKey": "ClusterName",
+    "ParameterValue": "demoapplication-redis"
+  },
+  {
+    "ParameterKey": "CacheNodeType",
+    "ParameterValue": "cache.t2.micro"
+  },
+  {
+    "ParameterKey": "CacheEngine",
+    "ParameterValue": "redis"
+  },
+  {
+    "ParameterKey": "CacheNodeCount",
+    "ParameterValue": "1"
+  },
+  {
+    "ParameterKey": "AutoMinorVersionUpgrade",
+    "ParameterValue": "false"
+  },
+  {
     "ParameterKey": "CodeBuildImage",
     "ParameterValue": "aws/codebuild/standard:3.0"
   },

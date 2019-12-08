@@ -474,13 +474,19 @@ Outputs:
     Value: !Ref PublicLoadBalancerListener
     Export:
       Name: !Sub ${EnvironmentName}:PublicListener
+
   ExternalUrl:
     Description: The url of the external load balancer
     Value: !Sub http://${PublicLoadBalancer.DNSName}
     Export:
       Name: !Sub ${EnvironmentName}:ExternalUrl
+
   WebServerAutoScalingGroupName:
     Description: The AutoScalingGroup Name
     Value: !Ref WebServerGroup
     Export:
       Name: !Sub ${EnvironmentName}:WebServer-AutoScalingGroup
+
+  WebSecurityGroup:
+    Description: The Web Security Group
+    Value: !Ref WebSecurityGroup

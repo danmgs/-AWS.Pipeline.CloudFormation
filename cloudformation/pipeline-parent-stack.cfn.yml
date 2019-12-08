@@ -98,6 +98,55 @@ Parameters:
     Type: String
     Default: '3'
 
+  # elasticache.cfn.yml specific parameters
+
+  ClusterName:
+    Description: Custom name of the cluster. Auto generated if you don't supply your own.
+    Type: String
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+  CacheNodeType:
+    Description: Cache node instance class, e.g. cache.t2.micro(free tier). See https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/CacheNodes.SelectSize.html
+    Type: String
+    Default: cache.t2.micro
+    ConstraintDescription: Node instance class not supported
+    AllowedValues:
+      - cache.t2.micro
+      - cache.t2.small
+      - cache.t2.medium
+      - cache.m4.large
+      - cache.m4.xlarge
+      - cache.m4.2xlarge
+      - cache.m4.4xlarge
+      - cache.m4.10xlarge
+      - cache.r4.large
+      - cache.r4.xlarge
+      - cache.r4.2xlarge
+      - cache.r4.4xlarge
+      - cache.r4.8xlarge
+      - cache.r4.16xlarge
+  CacheEngine:
+    Description: The underlying cache engine, either Redis or Memcached
+    Type: String
+    Default: redis
+    ConstraintDescription: Node instance class not supported
+    AllowedValues:
+      - redis
+      - memcached
+  CacheNodeCount:
+    Description: Number of nodes in the cluster. Only used with memcached engine, for redis this value will be set to 1.
+    Type: Number
+    MinValue: 1
+    MaxValue: 15
+    ConstraintDescription: Node count must be between 1 and 15
+    Default: 1
+  AutoMinorVersionUpgrade:
+    Description: Whether or not minor version upgrades to the cache engine should be applied automatically during the maintenance window.
+    Type: String
+    Default: false
+    AllowedValues:
+      - true
+      - false
+
   # codebuild.cfn.yml specific parameters
 
   CodeBuildImage:
@@ -248,6 +297,15 @@ Metadata:
           - MaxSize
       -
         Label:
+          default: "Elastic Cache Specific Configuration"
+        Parameters:
+          - ClusterName
+          - CacheNodeType
+          - CacheEngine
+          - CacheNodeCount
+          - AutoMinorVersionUpgrade
+      -
+        Label:
           default: "CodeBuild Project Specific Configuration"
         Parameters:
           - CodeBuildImage
@@ -315,6 +373,22 @@ Resources:
         MaxSize: !Ref MaxSize
       TimeoutInMinutes: 15
     DependsOn: [ VPCNetworkStack ]
+
+  ElasticCacheStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: templates/elasticache.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/xxxxxxxx.template
+      Parameters:
+        VPC: !GetAtt VPCNetworkStack.Outputs.VPCId
+        PrivateSubnet: !GetAtt VPCNetworkStack.Outputs.PrivateSubnet1
+        ClusterName: !Ref ClusterName
+        CacheNodeType: !Ref CacheNodeType
+        CacheEngine: !Ref CacheEngine
+        CacheNodeCount: !Ref CacheNodeCount
+        AutoMinorVersionUpgrade: !Ref AutoMinorVersionUpgrade
+        InboundSecurityGroup: !GetAtt AutoScalingGroupWithALBStack.Outputs.WebSecurityGroup
+      TimeoutInMinutes: 15
+    DependsOn: [ VPCNetworkStack, AutoScalingGroupWithALBStack ]
 
   CodeBuildStack:
     Type: AWS::CloudFormation::Stack
@@ -401,6 +475,9 @@ Outputs:
 
   AutoScalingGroupWithALBStackName:
     Value: !Ref AutoScalingGroupWithALBStack
+
+  ElasticCacheStackStackName:
+    Value: !Ref ElasticCacheStack
 
   CodeBuildStackName:
     Value: !Ref CodeBuildStack
