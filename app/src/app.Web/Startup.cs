@@ -35,8 +35,10 @@ namespace app.Web
 
             // To share antiforgery tokens, we set up the Data Protection service with a shared location.
             // https://stackoverflow.com/questions/43860631/how-do-i-handle-validateantiforgerytoken-across-linux-servers
+
+            var dirTokensPath = Configuration.GetValue<string>("AntiforgeryTokensPath");
             services.AddDataProtection()
-                .PersistKeysToFileSystem(new DirectoryInfo(@"/etc/keys/app"));
+                .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
