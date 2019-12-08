@@ -28,6 +28,9 @@ namespace app.Web
 
         public IConfiguration Configuration { get; }
 
+        string _redisUrl = null;
+        ConnectionMultiplexer _redis;
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -51,21 +54,21 @@ namespace app.Web
             //    .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
 
             /*** Shared Redis Cache ***/
-            var redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
+            _redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
 
             try
             {
-                var redis = ConnectionMultiplexer.Connect(redisUrl);
+                _redis = ConnectionMultiplexer.Connect(_redisUrl);
+                _log.Info($"Connected to Redis : {_redisUrl}");
                 services.AddDataProtection()
-                    .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys");
+                            .PersistKeysToStackExchangeRedis(_redis, "DataProtection-Keys");
+
             }
             catch (RedisConnectionException ex)
             {
-                _log.Error($"Could not connect to Redis : {redisUrl}", ex);
             }
             catch (Exception ex)
             {
-                _log.Error($"Could not connect to Redis : {redisUrl}", ex);
             }
         }
 
@@ -77,7 +80,9 @@ namespace app.Web
             var cwd = Directory.GetCurrentDirectory();
             _log.Info(" *** Current working directory should contain wwwroot to server static files ***");
             _log.Info($"Current working directory : {cwd}");
-            
+
+            _log.Info($"Redis url to connect is : {_redisUrl}");
+            _log.Info($"Redis connection status is : {_redis?.IsConnected} | {_redis?.GetStatus()}");
 
             if (env.IsDevelopment())
             {
