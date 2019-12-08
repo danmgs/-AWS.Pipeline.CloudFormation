@@ -7,6 +7,7 @@ using app.DAL.Managers;
 using app.Models;
 using log4net;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,11 @@ namespace app.Web
         {
             services.AddControllersWithViews();
             services.AddTransient(typeof(IDBManager<>), typeof(DynamoDBManager<>));
+
+            // To share antiforgery tokens, we set up the Data Protection service with a shared location.
+            // https://stackoverflow.com/questions/43860631/how-do-i-handle-validateantiforgerytoken-across-linux-servers
+            services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(@"/etc/keys/app"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

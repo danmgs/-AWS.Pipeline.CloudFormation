@@ -10,3 +10,7 @@ if [ -d /usr/app ]; then
 fi
 
 mkdir -vp /usr/app
+
+# To share antiforgery tokens, we set up the Data Protection service with a shared location.
+# https://stackoverflow.com/questions/43860631/how-do-i-handle-validateantiforgerytoken-across-linux-servers
+mkdir -vp /etc/keys/app

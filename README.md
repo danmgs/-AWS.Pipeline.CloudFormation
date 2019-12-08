@@ -10,8 +10,9 @@ These templates will setup an insfrastructure and a CI/CD pipeline :
 - creation of a CodePipeline Configuration
 - deployment of a Website in .Net Core 3.0 with users management feature.
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website1.PNG)
+<br/>
 
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/website1.PNG)
 
 <details>
   <summary>Click to expand</summary>
@@ -137,6 +138,13 @@ EC2 instances will be provided with :
 - a setup of a code deploy agent during provisionning thanks to cfn-init.
 
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Custom.svg)
+
+EC2 are configured with a IAM Role having following policies (AWS managed policy or custom ones):
+
+- AmazonEC2RoleforAWSCodeDeploy for the S3 Read access permissions
+- CloudWatchAgentServerPolicy for EC2 / CloudWatch R+W permissions (required when **Setup CloudWatch Logs Agent** - refer section)
+- DynamoDB R+W permissions for actions on the users management page on website.
+
 
 ### Security Configuration
 
