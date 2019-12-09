@@ -4,7 +4,6 @@
     string stateColor = (RedisStruct.IsConnected) ? "green":"red";
 }
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,7 +52,7 @@
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2019 - app - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-            - Redis url : @RedisStruct.Url | @RedisStruct.ConnectionState <i class="fas fa-circle" style="color:@stateColor"></i>
+            - Redis: @RedisStruct.Url | @RedisStruct.ConnectionState <i class="fas fa-circle" style="color:@stateColor"></i>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

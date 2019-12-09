@@ -16,7 +16,8 @@ namespace app.Web.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            var model = new HomeViewModel(Request.Headers);
+            return View(model);
         }
 
         public IActionResult Privacy()
