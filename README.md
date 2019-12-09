@@ -198,6 +198,11 @@ But failures start to happen when there are more than one EC2 instance served be
 Any GET request to fetch the form and the POST request to submit the form can be served by different EC2 web servers, thus failing the validation of token.
 
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken.PNG)
+<br/>
+
+On the end-user side, token is generated and stored in the browser's cookies:
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken2.PNG)
 
 <details>
   <summary>Click to expand details</summary>
@@ -217,7 +222,8 @@ Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException: The antiforgery
 
 <br/>
 
-As a solution, EC2s need to **share** anti-forgery tokens. There are different [ways](https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis) to store tokens.
+As a solution, anti-forgery tokens must be shared by the EC2 servers side.<br/>
+There are different [ways](https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis) to store tokens.
 
 We use Redis (AWS Elastic Cache Service) for this shared storage.
 
@@ -311,7 +317,7 @@ In Cloud Formation init section, see config step **04_setup_amazon-codedeploy-ag
 Refer template **autoscalinggroup.alb.cfn.yml**.<br/>
 In Cloud Formation init section, see **05_setup-amazon-cloudwatch-agent**.
 
-To enable CloudWatch watching CodeDeploy deployment logfiles, make sure to Configure file **/etc/awslogs/awscli.conf** :
+To enable CloudWatch watching CodeDeploy deployment and website logfiles, make sure to Configure file **/etc/awslogs/awscli.conf** :
 
 ```yml
 [/var/log/messages]
@@ -329,19 +335,36 @@ buffer_duration = 5000
 log_stream_name = {instance_id}
 initial_position = start_of_file
 log_group_name = codedeploy-agent-deployments-logs
+
+[website-application-logs]
+datetime_format = %b %d %H:%M:%S
+file = /usr/app/logs/*.log
+buffer_duration = 5000
+log_stream_name = {instance_id}
+initial_position = start_of_file
+log_group_name = website-application-logs
 ```
 
 LogGroup name chosen for CodeDeploy is: **codedeploy-agent-deployments-logs**.
+LogGroup name chosen for the website is: **website-application-logs**.
 
 :information_source: Logs in AWS Cloudwatch Console
 <details>
   <summary>Click to expand details</summary>
 
+  Logs groups and Log streams
+
   ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CloudwatchLogs1.PNG)
 
   ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CloudwatchLogs2.PNG)
 
+  CodeDeploy deployment logs
+
   ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CloudwatchLogs3.PNG)
+
+  Website logs
+
+  ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CloudwatchLogs4.PNG)
 </details>
 
 ## 7. Walkthrough - The Website
@@ -379,7 +402,7 @@ Output logs are on EC2 instances in this location:
 /usr/app/logs
 ```
 
-A possible enhancement is to configure these logs to be poured into CloudWatch under a new log group (refer section **6.2.**).
+For convenience, these logs are synchronized into CloudWatch (refer section **6.2.**).
 
 ## 8. Annex
 
