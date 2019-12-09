@@ -37,69 +37,12 @@ namespace app.Web
             InitAddDataProtection(services);
         }
 
-        /// <summary>
-        /// To share antiforgery tokens, we set up the Data Protection service with a shared location.
-        /// It could be a shared directory, a Redis cache ..
-        /// https://stackoverflow.com/questions/43860631/how-do-i-handle-validateantiforgerytoken-across-linux-servers
-        /// https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis
-        /// </summary>
-        /// <param name="services"></param>
-        async void InitAddDataProtection(IServiceCollection services)
-        {
-            /*** Shared Directory by EC2 instances ***/
-
-            //var dirTokensPath = Configuration.GetValue<string>("AntiforgeryTokensPath");
-            //services.AddDataProtection()
-            //    .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
-
-            /*** Shared Redis Cache ***/
-            //_redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
-
-            try
-            {
-                string keyname = Configuration.GetSection("Redis").GetValue<string>("ParamStoreKeyname");
-                _log.Info($"Start reading parameter : {keyname}");
-                RedisStruct.Url = await AWSParameterHelper.GetConfiguration(keyname);
-
-                _log.Info($"Start connecting to Redis url : {RedisStruct.Url}");
-                RedisStruct.Connection = ConnectionMultiplexer.Connect(RedisStruct.Url);
-                _log.Info($"Connected on Redis url : {RedisStruct.Url}");
-                services.AddDataProtection()
-                            .PersistKeysToStackExchangeRedis(RedisStruct.Connection, "DataProtection-Keys");
-            }
-            catch (RedisConnectionException ex)
-            {
-                RedisStruct.Errors.Add($"Not connected on Redis url : '{RedisStruct.Url}' : {ex}");
-            }
-            catch (Exception ex)
-            {
-                RedisStruct.Errors.Add($"An error has occured ! : { ex}");
-            }
-        }
-
-        void LoggingStuffAfterInitLog4Net()
-        {
-            string cwd = Directory.GetCurrentDirectory();
-            if (!Directory.Exists(Path.Combine(cwd, "wwwroot")))
-                _log.Error($"wwwroot not found in current directory '{cwd}'. It should contain wwwroot to serve static files");
-
-            foreach (var err in RedisStruct.Errors)
-            {
-                _log.Error(err);
-            }
-
-            if (RedisStruct.Connection != null)
-                _log.Info($"Redis connection on url '{RedisStruct.Url}'. Status is : {RedisStruct.ConnectionState} | {RedisStruct.Connection.GetStatus()}");
-            else
-                _log.Error($"Not connected on Redis url : '{RedisStruct.Url}' !");
-        }
-
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddLog4Net();
 
-            LoggingStuffAfterInitLog4Net();
+            LoggingStuffOnLog4NetInitCompleted();
 
             if (env.IsDevelopment())
             {
@@ -122,6 +65,65 @@ namespace app.Web
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
+
+        /// <summary>
+        /// To share antiforgery tokens, we set up the Data Protection service with a shared location.
+        /// It could be a shared directory, a Redis cache ..
+        /// https://stackoverflow.com/questions/43860631/how-do-i-handle-validateantiforgerytoken-across-linux-servers
+        /// https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis
+        /// </summary>
+        /// <param name="services"></param>
+        void InitAddDataProtection(IServiceCollection services)
+        {
+            /*** Shared Directory by EC2 instances ***/
+
+            //var dirTokensPath = Configuration.GetValue<string>("AntiforgeryTokensPath");
+            //services.AddDataProtection()
+            //    .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
+
+            /*** Shared Redis Cache ***/
+            //_redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
+
+            try
+            {
+                string keyname = Configuration.GetSection("Redis").GetValue<string>("ParamStoreKeyname");
+                RedisStruct.HistoryLogs.Add($"Start reading parameter : '{keyname}'");
+                RedisStruct.Url = AWSParameterHelper.GetConfiguration(keyname).Result;                
+
+                RedisStruct.HistoryLogs.Add($"Start connecting to Redis url : '{RedisStruct.Url}'");
+                RedisStruct.Connection = ConnectionMultiplexer.Connect(RedisStruct.Url);
+                RedisStruct.HistoryLogs.Add($"Connected on Redis url : '{RedisStruct.Url}'");
+
+                if (RedisStruct.Connection != null)
+                {
+                    RedisStruct.HistoryLogs.Add($"Redis connection on url '{RedisStruct.Url}'. Status is : {RedisStruct.ConnectionState} | {RedisStruct.Connection.GetStatus()}");
+
+                    services.AddDataProtection()
+                                .PersistKeysToStackExchangeRedis(RedisStruct.Connection, "DataProtection-Keys");
+                }
+                else
+                    RedisStruct.HistoryLogs.Add($"Not connected on Redis url : '{RedisStruct.Url}' !");
+
+            }
+            catch (RedisConnectionException ex)
+            {
+                RedisStruct.HistoryLogs.Add($"An error occured when connecting to Redis url : '{RedisStruct.Url}' : {ex}");
+            }
+            catch (Exception ex)
+            {
+                RedisStruct.HistoryLogs.Add($"An error has occured ! : { ex}");
+            }
+        }
+
+        void LoggingStuffOnLog4NetInitCompleted()
+        {
+            string cwd = Directory.GetCurrentDirectory();
+            if (!Directory.Exists(Path.Combine(cwd, "wwwroot")))
+                _log.Error($"wwwroot not found in current directory '{cwd}'. It should contain wwwroot to serve static files");
+
+            foreach (var l in RedisStruct.HistoryLogs)
+                _log.Info(l);
+        }
     }
 
     public class RedisStruct
@@ -134,6 +136,6 @@ namespace app.Web
 
         public static bool IsConnected => (Connection != null && Connection.IsConnected);
 
-        public static List<string> Errors = new List<string>();
+        public static List<string> HistoryLogs = new List<string>();
     }
 }
