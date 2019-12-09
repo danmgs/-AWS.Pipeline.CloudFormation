@@ -267,7 +267,6 @@ Parameters:
     Default: 5
     ConstraintDescription: must be a valid number
 
-
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -341,7 +340,6 @@ Metadata:
           - ReadCapacityUnits
           - WriteCapacityUnits
 
-
 Resources:
 
   VPCNetworkStack:
@@ -374,11 +372,13 @@ Resources:
       TimeoutInMinutes: 15
     DependsOn: [ VPCNetworkStack ]
 
-  ElasticCacheStack:
+  ElastiCacheStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: templates/elasticache.cfn.yml # https://YOUR_REGION.amazonaws.com/YOUR_BUCKET_NAME/xxxxxxxx.template
       Parameters:
+        ApplicationName: !Ref ApplicationName
+        EnvironmentName: !Ref EnvironmentName
         VPC: !GetAtt VPCNetworkStack.Outputs.VPCId
         PrivateSubnet: !GetAtt VPCNetworkStack.Outputs.PrivateSubnet1
         ClusterName: !Ref ClusterName
@@ -449,7 +449,6 @@ Resources:
         WriteCapacityUnits: !Ref WriteCapacityUnits
       TimeoutInMinutes: 15
 
-
 Outputs:
 
   ExternalUrl:
@@ -476,8 +475,8 @@ Outputs:
   AutoScalingGroupWithALBStackName:
     Value: !Ref AutoScalingGroupWithALBStack
 
-  ElasticCacheStackStackName:
-    Value: !Ref ElasticCacheStack
+  ElastiCacheStackStackName:
+    Value: !Ref ElastiCacheStack
 
   CodeBuildStackName:
     Value: !Ref CodeBuildStack

@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
 
 namespace app.Web
 {
-    public static class Utils
-    {
+    public static class WebHelper
+    {   
         public static string DisplayLocalHostName()
         {
             string hostName = null;

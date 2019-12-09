@@ -52,7 +52,6 @@ Parameters:
   #   Default: ec2TagValue0
   #   Description: The Code Deploy Tag Value for deployment to EC2
 
-
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:

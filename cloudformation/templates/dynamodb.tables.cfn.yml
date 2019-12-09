@@ -47,7 +47,6 @@ Parameters:
     Default: 5
     ConstraintDescription: must be a valid number
 
-
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -69,10 +68,8 @@ Metadata:
           - ReadCapacityUnits
           - WriteCapacityUnits
 
-
 Conditions:
   IsDbAutoScaled: !Equals [ !Ref BillingMode, PAY_PER_REQUEST ]
-
 
 Resources:
 
@@ -106,3 +103,4 @@ Outputs:
   Table:
     Description: The DynamoDB Table Arn
     Value: !GetAtt DynamoDBTable.Arn
+    

@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using app.DAL.Managers;
-using app.Models;
+using app.Web.Utils;
 using log4net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
@@ -14,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+using System;
+using System.IO;
 
 namespace app.Web
 {
@@ -47,7 +44,7 @@ namespace app.Web
         /// https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis
         /// </summary>
         /// <param name="services"></param>
-        void InitAddDataProtection(IServiceCollection services)
+        async void InitAddDataProtection(IServiceCollection services)
         {
             /*** Shared Directory by EC2 instances ***/
 
@@ -56,7 +53,10 @@ namespace app.Web
             //    .PersistKeysToFileSystem(new DirectoryInfo(dirTokensPath));
 
             /*** Shared Redis Cache ***/
-            _redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
+            //_redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
+
+            string keyname = Configuration.GetSection("Redis").GetValue<string>("ParamStoreKeyname");
+            _redisUrl = await AWSParameterHelper.GetConfiguration(keyname);
 
             try
             {
@@ -68,11 +68,11 @@ namespace app.Web
             }
             catch (RedisConnectionException ex)
             {
-                _log.Error($"Not connected to Redis on '{_redisUrl}' !", ex);
+                _log.Error($"Not connected to Redis with url : '{_redisUrl}' !", ex);
             }
             catch (Exception ex)
             {
-                _log.Error($"Not connected to Redis on '{_redisUrl}' !", ex);
+                _log.Error($"Not connected to Redis with url : '{_redisUrl}' !", ex);
             }
         }
 
@@ -84,9 +84,9 @@ namespace app.Web
                 _log.Error($"wwwroot not found in current directory '{cwd}'");
 
             if (_redis != null)
-                _log.Info($"Redis connection on '{_redisUrl}'. Status is : {_redis.IsConnected} | {_redis.GetStatus()}");
+                _log.Info($"Redis connection on url '{_redisUrl}'. Status is : {_redis.IsConnected} | {_redis.GetStatus()}");
             else
-                _log.Error($"Not connected to Redis on '{_redisUrl}' !");
+                _log.Error($"Not connected to Redis with url : '{_redisUrl}' !");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

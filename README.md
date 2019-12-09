@@ -133,6 +133,8 @@ For instance, this template is named by default **packaged-s3-pipeline-parent-st
 
 ### 4.1. Infrastructure
 
+#### 4.1. Overview
+
 The Cloud Formation templates generate an AutoScalingGroup (ASG) with 2 EC2 instances spread across 2 AZs in public subnets of the same VPC. An Application LoadBalancer is setup in front to present the Website to public users.
 
 EC2 instances will be provided with :
@@ -140,6 +142,12 @@ EC2 instances will be provided with :
 - a setup of a code deploy agent during provisionning thanks to cfn-init.
 
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Custom.svg)
+
+EC2 instances are connected to a DynamoDB table (users management feature) and a Redis Cache (anti-forgery tokens storage) used by the website.
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Details.svg)
+
+#### 4.1.2. IAM Role
 
 EC2 are configured with a IAM Role having following policies (AWS managed policies or custom inline policies):
 
@@ -215,7 +223,8 @@ This is configured like so in the .NET website application :
 
 ```csharp
   /*** Shared Redis Cache ***/
-  _redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
+  string keyname = Configuration.GetSection("Redis").GetValue<string>("ParamStoreKeyname");
+  _redisUrl = await AWSParameterHelper.GetConfiguration(keyname);
 
   _redis = ConnectionMultiplexer.Connect(_redisUrl);
   _log.Info($"Connected to Redis : {_redisUrl}");

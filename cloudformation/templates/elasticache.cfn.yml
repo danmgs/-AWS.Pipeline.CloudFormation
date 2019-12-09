@@ -17,12 +17,22 @@ Description: Creation of an Elastic Cache in AWS.
 
 Parameters:
 
+  ApplicationName:
+    Description: The Application name
+    Type: String
+    MinLength: '1'
+    Default: 'DemoApplication'
+    ConstraintDescription: must be a valid name
+  EnvironmentName:
+    Type: String
+    Default: production
+    Description: "A friendly environment name that will be used for namespacing all cluster resources. Example: staging, qa, or production"
   VPC:
-    Description: The VPC in which the elasticcache service belongs to
+    Description: The VPC in which the elastic cache service belongs to
     Type: AWS::EC2::VPC::Id
     AllowedPattern : "^(?:vpc-[0-9a-z]+|)$"
   PrivateSubnet:
-    Description: The PrivateSubnet "Subnet Group" in which the elasticcache service belongs to (private sub is better)
+    Description: The PrivateSubnet "Subnet Group" in which the elastic cache service belongs to (private sub is better)
     Type: AWS::EC2::Subnet::Id
   ClusterName:
     Description: Custom name of the cluster. Auto generated if you don't supply your own.
@@ -71,18 +81,44 @@ Parameters:
       - true
       - false
   InboundSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Description: The security group of EC2 instances that will connect to the ElasticCache service.
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: The security group of EC2 instances that will connect to the Elastic Cache service.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Environment Configuration
+        Parameters:
+          - ApplicationName
+          - EnvironmentName
+      -
+        Label:
+          default: "Elastic Cache Shared Settings"
+        Parameters:
+          - VPC
+          - PrivateSubnet
+          - ClusterName
+          - CacheNodeType
+          - CacheEngine
+          - CacheNodeCount
+          - AutoMinorVersionUpgrade
+          - InboundSecurityGroup
+      -
+        Label:
+          default: "Elastic Cache Settings - Specifics Memcached"
+        Parameters:
+          - CacheNodeCount
 
 Conditions:
 
   IsRedis: !Equals [ !Ref CacheEngine, 'redis']
-  AllowAccesstoElasticCache: !Not [ !Equals [!Ref 'InboundSecurityGroup', ''] ]
+  AllowAccessToCache: !Not [ !Equals [!Ref 'InboundSecurityGroup', ''] ]
 
 Resources:
 
-  SecurityGroup:
-    Type: AWS::EC2::Elastic
+  ElastiCacheSG:
+    Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: ElastiCache Security Group
       VpcId: !Ref VPC
@@ -91,18 +127,21 @@ Resources:
           FromPort: !If [ IsRedis, 6379, 11211]
           ToPort: !If [ IsRedis, 6379, 11211]
       Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-ElastiCacheSecurityGroup"
+        - Key: ApplicationName
+          Value: !Ref ApplicationName
+        - Key: EnvironmentName
+          Value: !Ref EnvironmentName
 
   SecurityGroupIngress:
-    Condition: AllowAccesstoElasticCache
     Type: AWS::EC2::SecurityGroupIngress  # prevent security group circular references
+    Condition: AllowAccessToCache
+    DependsOn: ElastiCacheSG
     Properties:
-      GroupId: !Ref SecurityGroup
+      GroupId: !Ref ElastiCacheSG
       IpProtocol: tcp
       ToPort: !If [ IsRedis, 6379, 11211]
       FromPort: !If [ IsRedis, 6379, 11211]
-      SourceSecurityGroupId: !GetAtt InboundSecurityGroup.GroupId
+      SourceSecurityGroupId: !Ref InboundSecurityGroup
 
   SubnetGroup:
     Type: AWS::ElastiCache::SubnetGroup
@@ -121,16 +160,36 @@ Resources:
       NumCacheNodes: !If [ IsRedis, 1, !Ref CacheNodeCount]
       CacheSubnetGroupName: !Ref SubnetGroup
       VpcSecurityGroupIds:
-        - !GetAtt SecurityGroup.GroupId
+        - !GetAtt ElastiCacheSG.GroupId
       Tags:
-        - Key: Name
-          Value: !Ref AWS::StackName
+        - Key: ApplicationName
+          Value: !Ref ApplicationName
+        - Key: EnvironmentName
+          Value: !Ref EnvironmentName
+
+  StoredConfigElastiCacheAddress:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: !Sub ${ApplicationName}:${EnvironmentName}:ElastiCacheAddress
+      Name: !Sub '/${ApplicationName}/${EnvironmentName}/ElastiCacheAddress'
+      Tier: Standard
+      Type: String
+      Value: !If [ IsRedis, !GetAtt ElastiCacheCluster.RedisEndpoint.Address, !GetAtt ElastiCacheCluster.ConfigurationEndpoint.Address]
+      Tags:
+        'ApplicationName': !Ref ApplicationName
+        'EnvironmentName': !Ref EnvironmentName
 
 Outputs:
 
+  StoredConfigElastiCacheAddress:
+    Description: Elastic Cache Address in Parameter Store
+    Value: !GetAtt StoredConfigElastiCacheAddress.Value
+    Export:
+      Name: !Sub ${AWS::StackName}-StoredConfigElastiCacheAddress
+
   ElastiCacheAddress:
     Description: ElastiCache endpoint address
-    Value: !If [ IsRedis, !GetAtt ElastiCacheCluster.RedisEndpoint.Address, !GetAtt ElastiCacheCluster.ConfigurationEndpoint.Address]
+    Value: !GetAtt StoredConfigElastiCacheAddress.Value
     Export:
       Name: !Sub ${AWS::StackName}-ElastiCacheAddress
 
