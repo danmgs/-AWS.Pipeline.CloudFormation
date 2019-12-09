@@ -29,7 +29,7 @@ namespace app.Web.Utils
                 }
                 catch (Exception ex)
                 {
-                    _log.Error($"GetConfiguration in error.", ex);
+                    throw;
                 }
             }
 

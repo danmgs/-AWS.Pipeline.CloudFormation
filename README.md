@@ -184,7 +184,7 @@ A security group rule allowing inbound traffic is configured at the ALB level:
 Likewise, security groups are configured on the ASG EC2 instances to allow:
 
 - inbound HTTP requests from the ALB to the EC2 instances' port **80** (for the default html sample page deployed in **/var/www/html** with Apache httpd).
-- incoming HTTP requests from ALB to the EC2 instances port **5000** (added to reach **.Net Core Website**).
+- inbound HTTP requests from the ALB to the EC2 instances' port **5000** (added to reach **.Net Core Website**).
 
 - remote SSH Access on port **22** for convenience.
 
@@ -195,14 +195,7 @@ When we operate Create / Edit / Delete operations on the website, we submit POST
 Of course, there is no use to configure anti-forgery token storage when running on 1 server (dev or debug purposes..).<br/>
 But failures start to happen when there are more than one EC2 instance served behind a load-balancer, as EC2s instances store **different** anti-forgery tokens.
 
-Any GET request to fetch the form and the POST request to submit the form can be served by different EC2 web servers, thus failing the validation of token.
-
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken.PNG)
-<br/>
-
-On the end-user side, token is generated and stored in the browser's cookies:
-
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken2.PNG)
+Any GET request to fetch the form and the POST request to submit the form can be served by different EC2 web servers, thus failing the validation of token:
 
 <details>
   <summary>Click to expand details</summary>
@@ -220,12 +213,17 @@ Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException: The antiforgery
 ```
 </details>
 
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken1.PNG)
+
+On the end-user side, token is generated and stored in the browser's cookies:
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken2.PNG)
+
 <br/>
 
-As a solution, anti-forgery tokens must be shared by the EC2 servers side.<br/>
-There are different [ways](https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis) to store tokens.
+As a solution, anti-forgery tokens **must be shared** by the EC2 servers side and there are different [ways](https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis) to store shared tokens.
 
-We use Redis (AWS Elastic Cache Service) for this shared storage.
+We choose to use Redis (AWS Elastic Cache Service) as a shared storage.
 
 This is configured like so in the .NET website application :
 
@@ -239,6 +237,8 @@ This is configured like so in the .NET website application :
   services.AddDataProtection()
               .PersistKeysToStackExchangeRedis(_redis, "DataProtection-Keys");
 ```
+
+The parameter is create in the Parameter Store (in AWS Systems Manager) during the deployment of CFN template **elasticache.cfn.yml**.
 
 ## 5. Walkthrough - Build and deploy
 

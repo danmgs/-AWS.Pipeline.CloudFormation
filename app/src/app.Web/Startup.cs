@@ -111,7 +111,7 @@ namespace app.Web
             }
             catch (Exception ex)
             {
-                RedisStruct.HistoryLogs.Add($"An error has occured ! : { ex}");
+                RedisStruct.HistoryLogs.Add($"An error has occured : {ex}");
             }
         }
 
