@@ -158,8 +158,12 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'dynamodb:*'
-                  - 'ssm:*'
                 Resource: '*'
+              - Effect: Allow
+                Action:
+                  - 'ssm:GetParameter'
+                  - 'ssm:GetParameters'
+                Resource: !Sub 'arn:aws:ssm:*:*:parameter/${ApplicationName}/${EnvironmentName}/*'
 
   NotificationTopic:
     Type: 'AWS::SNS::Topic'

@@ -86,6 +86,8 @@ namespace app.Web
 
             try
             {
+                RedisStruct.HistoryLogs.Add($"Configuring Antiforgery token shared storage");
+
                 string keyname = Configuration.GetSection("Redis").GetValue<string>("ParamStoreKeyname");
                 RedisStruct.HistoryLogs.Add($"Start reading parameter : '{keyname}'");
                 RedisStruct.Url = AWSParameterHelper.GetConfiguration(keyname).Result;                
@@ -119,8 +121,9 @@ namespace app.Web
         {
             string cwd = Directory.GetCurrentDirectory();
             if (!Directory.Exists(Path.Combine(cwd, "wwwroot")))
-                _log.Error($"wwwroot not found in current directory '{cwd}'. It should contain wwwroot to serve static files");
+                _log.Warn($"wwwroot not found in current directory '{cwd}'. It must contain wwwroot to serve static files");
 
+ 
             foreach (var l in RedisStruct.HistoryLogs)
                 _log.Info(l);
         }
