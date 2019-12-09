@@ -17,7 +17,7 @@ namespace app.Web.Controllers
         public IActionResult Index()
         {
             var model = new HomeViewModel(Request.Headers);
-            _logger.LogDebug(model.PrintDetails());
+            _logger.LogDebug(model.PrintDetails()); // enable Debug log in appsettings.json
             return View(model);
         }
 

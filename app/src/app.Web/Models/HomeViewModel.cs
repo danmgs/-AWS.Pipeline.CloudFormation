@@ -12,10 +12,9 @@ namespace app.Web.Models
         }
 
         public IHeaderDictionary Headers { get; set; }
-        public string ServerHostname => WebHelper.DisplayLocalHostName();
-        public string ClientHostname => Headers["Host"];
+        public string ServerPrivateHostname => WebHelper.DisplayLocalHostName();
+        public string ServerHostname => Headers["Host"];
         public string ClientSourceIp => Headers["X-Forwarded-For"];
-        public string ClientIp => !string.IsNullOrEmpty(ClientHostname) ? ClientHostname : ClientSourceIp;
 
         public string PrintDetails()
         {
