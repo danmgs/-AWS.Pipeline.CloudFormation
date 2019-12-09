@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Linq;
+using System.Text;
 
 namespace app.Web.Models
 {
@@ -14,5 +16,14 @@ namespace app.Web.Models
         public string ClientHostname => Headers["Host"];
         public string ClientSourceIp => Headers["X-Forwarded-For"];
         public string ClientIp => !string.IsNullOrEmpty(ClientHostname) ? ClientHostname : ClientSourceIp;
+
+        public string PrintDetails()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var h in Headers)
+                sb.Append(h.Key).Append(": ").Append(h.Value).Append("\n");
+
+            return sb.ToString();
+        }
     }
 }

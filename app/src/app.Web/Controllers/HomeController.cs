@@ -17,6 +17,7 @@ namespace app.Web.Controllers
         public IActionResult Index()
         {
             var model = new HomeViewModel(Request.Headers);
+            _logger.LogDebug(model.PrintDetails());
             return View(model);
         }
 
