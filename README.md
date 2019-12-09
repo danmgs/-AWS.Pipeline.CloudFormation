@@ -67,11 +67,11 @@ You can run each scripts in the **/cloudformation/templates** directory one by o
 | --- | ----------------------------------- | --------------------------------------------------------------------- |
 |  1  | vpc.network.cfn.yml                 | creation of a network with VPC and subnets                            |
 |  2  | autoscalinggroup.alb.cfn.yml        | creation of an ASG with an ALB                                        |
-|  3  | autoscalinggroup.alb.cfn.yml        | creation of an ASG with an ALB                                        |
+|  3  | elasticache.cfn.yml                 | creation of an Elastic Cache                                          |
 |  4  | codebuild.cfn.yml                   | creation of a CodeBuild Project Configuration                         |
 |  5  | codedeploy.cfn.yml                  | creation of a CodeDeploy Project Configuration                        |
 |  6  | codepipeline-github-events.cfn.yml  | creation of a CodePipeline Configuration                              |
-|  7  | dynamodb.tables.cfn.yml             | Creation of a table in dynamodb in AWS for the website                |
+|  7  | dynamodb.tables.cfn.yml             | Creation of a table in dynamodb for the website                       |
 
 
 A better way is to run the custom **aws-cli-deploy.bat** to create the full stack in one shot.
@@ -196,6 +196,8 @@ Of course, there is no use to configure anti-forgery token storage when running 
 But failures start to happen when there are more than one EC2 instance served behind a load-balancer, as EC2s instances store **different** anti-forgery tokens.
 
 Any GET request to fetch the form and the POST request to submit the form can be served by different EC2 web servers, thus failing the validation of token.
+
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken.PNG)
 
 <details>
   <summary>Click to expand details</summary>
