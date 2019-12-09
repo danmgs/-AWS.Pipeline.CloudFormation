@@ -25,8 +25,7 @@ namespace app.Web
 
         public IConfiguration Configuration { get; }
 
-        string _redisUrl = null;
-        ConnectionMultiplexer _redis;
+        public static RedisStruct RedisInfo;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -56,37 +55,37 @@ namespace app.Web
             //_redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
 
             string keyname = Configuration.GetSection("Redis").GetValue<string>("ParamStoreKeyname");
-            _redisUrl = await AWSParameterHelper.GetConfiguration(keyname);
+            RedisStruct.Url = await AWSParameterHelper.GetConfiguration(keyname);
 
             try
             {
-                _redis = ConnectionMultiplexer.Connect(_redisUrl);
-                _log.Info($"Connected to Redis : {_redisUrl}");
+                _log.Info($"Start connecting to Redis url : {RedisStruct.Url}");
+                RedisStruct.Connection = ConnectionMultiplexer.Connect(RedisStruct.Url);
+                _log.Info($"Connected to Redis url : {RedisStruct.Url}");
                 services.AddDataProtection()
-                            .PersistKeysToStackExchangeRedis(_redis, "DataProtection-Keys");
+                            .PersistKeysToStackExchangeRedis(RedisStruct.Connection, "DataProtection-Keys");
 
             }
             catch (RedisConnectionException ex)
             {
-                _log.Error($"Not connected to Redis with url : '{_redisUrl}' !", ex);
+                _log.Error($"Not connected to Redis url : '{RedisStruct.Url}' !", ex);
             }
             catch (Exception ex)
             {
-                _log.Error($"Not connected to Redis with url : '{_redisUrl}' !", ex);
+                _log.Error($"Not connected to Redis url : '{RedisStruct.Url}' !", ex);
             }
         }
 
         void LoggingStuffAfterInitLog4Net()
         {
             string cwd = Directory.GetCurrentDirectory();
-            _log.Info($" *** Current working directory '{cwd}' should contain wwwroot to server static files ***");
             if (!Directory.Exists(Path.Combine(cwd, "wwwroot")))
-                _log.Error($"wwwroot not found in current directory '{cwd}'");
+                _log.Error($"wwwroot not found in current directory '{cwd}'. It should contain wwwroot to serve static files");
 
-            if (_redis != null)
-                _log.Info($"Redis connection on url '{_redisUrl}'. Status is : {_redis.IsConnected} | {_redis.GetStatus()}");
+            if (RedisStruct.Connection != null)
+                _log.Info($"Redis connection on url '{RedisStruct.Url}'. Status is : {RedisStruct.Connection.IsConnected} | {RedisStruct.Connection.GetStatus()}");
             else
-                _log.Error($"Not connected to Redis with url : '{_redisUrl}' !");
+                _log.Error($"Not connected to Redis url : '{RedisStruct.Url}' !");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -117,5 +116,16 @@ namespace app.Web
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
+    }
+
+    public class RedisStruct
+    {
+        public static string Url;
+
+        public static ConnectionMultiplexer Connection;
+
+        public static string ConnectionState => IsConnected ? "Connected" : "Not Connected";
+
+        public static bool IsConnected => (Connection != null && Connection.IsConnected);
     }
 }
