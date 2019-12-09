@@ -97,6 +97,10 @@ Parameters:
     Description: AutoScalingGroup MaxSize
     Type: String
     Default: '3'
+  HealthCheckPath:
+    Description: Health Check Path
+    Type: String
+    Default: '/'
 
   # elasticache.cfn.yml specific parameters
 
@@ -294,6 +298,7 @@ Metadata:
           - DesiredCapacity
           - MinSize
           - MaxSize
+          - HealthCheckPath
       -
         Label:
           default: "Elastic Cache Specific Configuration"
@@ -369,6 +374,7 @@ Resources:
         DesiredCapacity: !Ref DesiredCapacity
         MinSize: !Ref MinSize
         MaxSize: !Ref MaxSize
+        HealthCheckPath: !Ref HealthCheckPath
       TimeoutInMinutes: 15
     DependsOn: [ VPCNetworkStack ]
 

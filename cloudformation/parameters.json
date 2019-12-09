@@ -48,6 +48,10 @@
     "ParameterValue": "3"
   },
   {
+    "ParameterKey": "HealthCheckPath",
+    "ParameterValue": "/Home/Health"
+  },
+  {
     "ParameterKey": "ClusterName",
     "ParameterValue": "demoapplication-redis"
   },

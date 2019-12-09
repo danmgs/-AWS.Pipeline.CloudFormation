@@ -98,6 +98,10 @@ Parameters:
     Description: AutoScalingGroup MaxSize
     Type: String
     Default: '3'
+  HealthCheckPath:
+    Description: Health Check Path
+    Type: String
+    Default: '/'
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -112,6 +116,7 @@ Metadata:
           - DesiredCapacity
           - MinSize
           - MaxSize
+          - HealthCheckPath
           - OperatorEMail
       - Label:
           default: EC2 from AutoScalingGroup Configuration
@@ -432,7 +437,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 6
-      HealthCheckPath: /
+      HealthCheckPath: !Ref HealthCheckPath
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2

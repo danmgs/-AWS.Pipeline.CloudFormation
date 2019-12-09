@@ -1,0 +1,10 @@
+﻿@model app.Web.Models.HomeViewModel
+
+@{
+    ViewData["Title"] = "Debug";
+}
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    @Model.PrintDetails()
+</p>
