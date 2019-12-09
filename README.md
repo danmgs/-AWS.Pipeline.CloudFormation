@@ -149,12 +149,12 @@ EC2 instances are connected to a DynamoDB table (users management feature) and a
 
 #### 4.1.2. IAM Role
 
-EC2 are configured with a IAM Role having following policies (AWS managed policies or custom inline policies):
+EC2 are configured with a IAM Role with following policies (AWS managed policies or custom inline policies):
 
-- AmazonEC2RoleforAWSCodeDeploy for the S3 Read access permissions
-- CloudWatchAgentServerPolicy for EC2 / CloudWatch R+W permissions (required when **Setup CloudWatch Logs Agent**, refer section **6.2.**)
+- AmazonEC2RoleforAWSCodeDeploy for the S3 Read permissions
+- CloudWatchAgentServerPolicy mainly for EC2 / CloudWatch R+W permissions (required when **Setup CloudWatch Logs Agent**, refer section **6.2.**)
 - DynamoDB R+W permissions for actions on the users management page on website.
-
+- Systems Managers Read permissions to retrieve stored parameters.
 
 ### 4.2. Security
 

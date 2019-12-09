@@ -158,6 +158,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'dynamodb:*'
+                  - 'ssm:*'
                 Resource: '*'
 
   NotificationTopic:
