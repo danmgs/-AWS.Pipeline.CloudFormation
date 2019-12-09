@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace app.Web
@@ -54,25 +55,25 @@ namespace app.Web
             /*** Shared Redis Cache ***/
             //_redisUrl = Configuration.GetSection("Redis").GetValue<string>("Url");
 
-            string keyname = Configuration.GetSection("Redis").GetValue<string>("ParamStoreKeyname");
-            RedisStruct.Url = await AWSParameterHelper.GetConfiguration(keyname);
-
             try
             {
+                string keyname = Configuration.GetSection("Redis").GetValue<string>("ParamStoreKeyname");
+                _log.Info($"Start reading parameter : {keyname}");
+                RedisStruct.Url = await AWSParameterHelper.GetConfiguration(keyname);
+
                 _log.Info($"Start connecting to Redis url : {RedisStruct.Url}");
                 RedisStruct.Connection = ConnectionMultiplexer.Connect(RedisStruct.Url);
-                _log.Info($"Connected to Redis url : {RedisStruct.Url}");
+                _log.Info($"Connected on Redis url : {RedisStruct.Url}");
                 services.AddDataProtection()
                             .PersistKeysToStackExchangeRedis(RedisStruct.Connection, "DataProtection-Keys");
-
             }
             catch (RedisConnectionException ex)
             {
-                _log.Error($"Not connected to Redis url : '{RedisStruct.Url}' !", ex);
+                RedisStruct.Errors.Add($"Not connected on Redis url : '{RedisStruct.Url}' : {ex}");
             }
             catch (Exception ex)
             {
-                _log.Error($"Not connected to Redis url : '{RedisStruct.Url}' !", ex);
+                RedisStruct.Errors.Add($"An error has occured ! : { ex}");
             }
         }
 
@@ -82,10 +83,15 @@ namespace app.Web
             if (!Directory.Exists(Path.Combine(cwd, "wwwroot")))
                 _log.Error($"wwwroot not found in current directory '{cwd}'. It should contain wwwroot to serve static files");
 
+            foreach (var err in RedisStruct.Errors)
+            {
+                _log.Error(err);
+            }
+
             if (RedisStruct.Connection != null)
-                _log.Info($"Redis connection on url '{RedisStruct.Url}'. Status is : {RedisStruct.Connection.IsConnected} | {RedisStruct.Connection.GetStatus()}");
+                _log.Info($"Redis connection on url '{RedisStruct.Url}'. Status is : {RedisStruct.ConnectionState} | {RedisStruct.Connection.GetStatus()}");
             else
-                _log.Error($"Not connected to Redis url : '{RedisStruct.Url}' !");
+                _log.Error($"Not connected on Redis url : '{RedisStruct.Url}' !");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -127,5 +133,7 @@ namespace app.Web
         public static string ConnectionState => IsConnected ? "Connected" : "Not Connected";
 
         public static bool IsConnected => (Connection != null && Connection.IsConnected);
+
+        public static List<string> Errors = new List<string>();
     }
 }

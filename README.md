@@ -281,7 +281,7 @@ These scripts are located in **/scripts/** directory.
 
 
   The first time, **ApplicationStop** hook doesn't run.
-  By design, [**ApplicationStop** run on the second but with scripts from **previous commit**.](https://github.com/aws/aws-codedeploy-agent/issues/80). And so on.
+  By design, [**ApplicationStop** run on the second but with scripts from **previous commit**](https://github.com/aws/aws-codedeploy-agent/issues/80). And so on.
 
   ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/CodeDeploySequence.PNG)
 
@@ -306,7 +306,7 @@ In Cloud Formation init section, see config step **04_setup_amazon-codedeploy-ag
 
 ### 6.2. Setup CloudWatch Logs Agent
 
-This allows to diagnose any Deployment issue.
+[CloudWatch Logs Agent](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html) allows to diagnose any deployment issue.
 
 Refer template **autoscalinggroup.alb.cfn.yml**.<br/>
 In Cloud Formation init section, see **05_setup-amazon-cloudwatch-agent**.
