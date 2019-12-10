@@ -126,15 +126,15 @@ Resources:
 
 Outputs:
 
-  CodeDeployApplicationName:
-    Description: The Application Name
-    Value: !Ref CodeDeployApplicationName
-
   CodeDeployApplication:
     Description: The CodeDeploy Application
     Value: !Ref CodeDeployApplication
     Export:
       Name: !Sub ${AWS::StackName}-CodeDeployApplication
+
+  CodeDeployApplicationName:
+    Description: The Application Name
+    Value: !Ref CodeDeployApplicationName
 
   CodeDeployDeploymentGroupName:
     Description: The CodeDeploy Deployment Group

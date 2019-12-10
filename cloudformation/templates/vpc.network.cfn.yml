@@ -175,38 +175,38 @@ Outputs:
     Description: Environment name
     Value: !Ref EnvironmentName
 
-  VPCId:
-    Description: VPC ID
-    Value: !Ref VPC
-    # Export:
-    #   Name: !Sub "${EnvironmentName}:VpcID"
-
-  VpcCidr:
-    Description: Vpc cidr block
-    Value: !FindInMap [ CIDRMap, VPC, CIDR ]
-    Export:
-      Name: !Sub "${EnvironmentName}:vpc-cidr"
-
   PublicSubnet1:
     Description: Public subnet 1 ID
     Value: !Ref PublicSubnet1
-    # Export:
-    #   Name: !Sub "${EnvironmentName}:PublicSubnet1ID"
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet1ID"
 
   PublicSubnet2:
     Description: Public subnet 2 ID
     Value: !Ref PublicSubnet2
-    # Export:
-    #   Name: !Sub "${EnvironmentName}:PublicSubnet2ID"
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet2ID"
 
   PrivateSubnet1:
     Description: Private subnet 1 ID
     Value: !Ref PrivateSubnet1
     Export:
-      Name: !Sub "${EnvironmentName}:PrivateSubnet1ID"
+      Name: !Sub "${AWS::StackName}-PrivateSubnet1ID"
 
   PrivateSubnet2:
     Description: Private subnet 2 ID
     Value: !Ref PrivateSubnet2
     Export:
-      Name: !Sub "${EnvironmentName}:PrivateSubnet2ID"
+      Name: !Sub "${AWS::StackName}-PrivateSubnet2ID"
+
+  VPCId:
+    Description: VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VPCId"
+
+  VPCCidr:
+    Description: Vpc cidr block
+    Value: !FindInMap [ CIDRMap, VPC, CIDR ]
+    Export:
+      Name: !Sub "${AWS::StackName}-VPCCidr"

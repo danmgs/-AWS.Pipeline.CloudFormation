@@ -167,7 +167,7 @@ Resources:
         - Key: EnvironmentName
           Value: !Ref EnvironmentName
 
-  StoredConfigElastiCacheAddress:
+  ElastiCacheStoredConfigAddress:
     Type: AWS::SSM::Parameter
     Properties:
       Description: !Sub ${ApplicationName}:${EnvironmentName}:ElastiCacheAddress
@@ -181,15 +181,9 @@ Resources:
 
 Outputs:
 
-  StoredConfigElastiCacheAddress:
-    Description: Elastic Cache Address in Parameter Store
-    Value: !GetAtt StoredConfigElastiCacheAddress.Value
-    Export:
-      Name: !Sub ${AWS::StackName}-StoredConfigElastiCacheAddress
-
   ElastiCacheAddress:
     Description: ElastiCache endpoint address
-    Value: !GetAtt StoredConfigElastiCacheAddress.Value
+    Value: !GetAtt ElastiCacheStoredConfigAddress.Value
     Export:
       Name: !Sub ${AWS::StackName}-ElastiCacheAddress
 
@@ -216,3 +210,15 @@ Outputs:
     Value: !If [ IsRedis, 6379, 11211]
     Export:
       Name: !Sub ${AWS::StackName}-ElastiCachePort
+
+  ElastiCacheSG:
+    Description: ElastiCache Security Group
+    Value: !Ref ElastiCacheSG
+    Export:
+      Name: !Sub ${AWS::StackName}-ElastiCacheSG
+
+  ElastiCacheStoredConfigAddress:
+    Description: Elastic Cache Address in Parameter Store
+    Value: !GetAtt ElastiCacheStoredConfigAddress.Value
+    Export:
+      Name: !Sub ${AWS::StackName}-ElastiCacheStoredConfigAddress

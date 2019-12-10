@@ -137,28 +137,33 @@ For instance, this template is named by default **packaged-s3-pipeline-parent-st
 
 The Cloud Formation templates generate an AutoScalingGroup (ASG) with 2 EC2 instances spread across 2 AZs in public subnets of the same VPC. An Application LoadBalancer is setup in front to present the Website to public users.
 
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/AWS_Pipeline_Web_Architecture.svg)
+
 EC2 instances will be provided with :
 - an AMI containing .Net Core 3.0 and Linux.
 - a setup of a code deploy agent during provisionning thanks to cfn-init.
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Custom.svg)
+The website deployed on EC2 instances can reach a DynamoDB table (users page)
 
-EC2 instances are connected to a DynamoDB table (users management feature) and a Redis Cache (anti-forgery tokens storage) used by the website.
+The website can access a Redis Cache served as an anti-forgery tokens shared storage.
+This cache is installed in a private subnet.
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Web_App_Reference_Architecture_Details.svg)
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/AWS_Pipeline_Web_Architecture_Details.svg)
 
 #### 4.1.2. IAM Role
 
-EC2 are configured with a IAM Role with following policies (AWS managed policies or custom inline policies):
+EC2 are configured with an IAM Role with following policies (either AWS managed policies, or custom inline policies):
 
 - AmazonEC2RoleforAWSCodeDeploy for the S3 Read permissions
 - CloudWatchAgentServerPolicy mainly for EC2 / CloudWatch R+W permissions (required when **Setup CloudWatch Logs Agent**, refer section **6.2.**)
-- DynamoDB R+W permissions for actions on the users management page on website.
-- Systems Managers Read permissions to retrieve stored parameters.
+- DynamoDB R+W permissions for actions on the website users page.
+- Systems Managers Read permissions to retrieve stored parameters (Elastic Cache address.. ).
+
+- There is no need to add Elastic Cache policies.
 
 ### 4.2. Security
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/SecurityGroups.svg)
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/AWS_Pipeline_SecurityGroups.svg)
 
 #### 4.2.1. Proxy Web configuration
 
@@ -177,16 +182,16 @@ It will be submitted to the reverse proxy which redirects to the website made av
 
 #### 4.2.3 Security groups configuration
 
-A security group rule allowing inbound traffic is configured at the ALB level:
+- The ALB is configured to allow inbound traffic on port 80 to be reached publicly via an external url.
 
-- people can reach it publicly via an external url on port **80**.
+- Likewise, security groups are configured on the ASG EC2 instances to allow:
 
-Likewise, security groups are configured on the ASG EC2 instances to allow:
+> - inbound HTTP requests from the ALB to the EC2s on port **80** (for the default html sample page deployed in **/var/www/html** with Apache httpd).
+> - inbound HTTP requests from the ALB to the EC2s on port **5000** (added to reach **.Net Core Website**).
 
-- inbound HTTP requests from the ALB to the EC2 instances' port **80** (for the default html sample page deployed in **/var/www/html** with Apache httpd).
-- inbound HTTP requests from the ALB to the EC2 instances' port **5000** (added to reach **.Net Core Website**).
+> - inbound SSH remote access on port **22**.
 
-- remote SSH Access on port **22** for convenience.
+- The Redis cache is configured to allow inbound traffic on port 6379 from the EC2s.
 
 #### 4.2.4. Anti-forgery tokens configuration
 
@@ -213,19 +218,17 @@ Microsoft.AspNetCore.Antiforgery.AntiforgeryValidationException: The antiforgery
 ```
 </details>
 
+Illustrative schema:
+
 ![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken1.PNG)
-
-On the end-user side, token is generated and stored in the browser's cookies:
-
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/antiforgerytoken2.PNG)
 
 <br/>
 
-As a solution, anti-forgery tokens **must be shared** by the EC2 servers side and there are different [ways](https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis) to store shared tokens.
+As a solution, anti-forgery tokens **must be shared** by the EC2 servers side.
 
-We choose to use Redis (AWS Elastic Cache Service) as a shared storage.
+There are different [ways](https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/implementation/key-storage-providers?view=aspnetcore-2.1&tabs=visual-studio#azure-and-redis) to store shared tokens and we choose a AWS Elastic Redis Cache.
 
-This is configured like so in the .NET website application :
+This is configured like so in the .NET website application. The parameter is the redis URL.
 
 ```csharp
   /*** Shared Redis Cache ***/
@@ -238,17 +241,17 @@ This is configured like so in the .NET website application :
               .PersistKeysToStackExchangeRedis(_redis, "DataProtection-Keys");
 ```
 
-The parameter is create in the Parameter Store (in AWS Systems Manager) during the deployment of CFN template **elasticache.cfn.yml**.
+The parameter is created during the deployment of CFN template **elasticache.cfn.yml** and stored in AWS Systems Manager.
 
 ## 5. Walkthrough - Build and deploy
 
-![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/Code_Pipeline_Diagram.svg)
+![alt capture](https://github.com/danmgs/AWS.Pipeline.CloudFormation/blob/master/img/AWS_Pipeline_BuildDeploy_Workflow.svg)
 
 ### 5.1. CodeBuild configuration
 
 The file **buildspec.yml** is used by AWS CodeBuild.
 
-This file details how to build the application and generate and a build artifact containing :
+This file details how to build the application and generates a build artifact containing :
 
 ```yml
 artifacts:
@@ -296,12 +299,12 @@ These scripts are located in **/scripts/** directory.
 
 ### 5.3. CodePipeline configuration
 
-CodePipeline orchestrates the Build and Deploy.
+CodePipeline orchestrates the build and deployment phases.
 
 Each commit will trigger automatically:
 - a build in CodeBuild
-- the generation of a an artifact to be deployed by CodeDeploy
-- deployment of the website by CodeDeploy
+- the generation of an artifact to be deployed
+- the deployment of the website by CodeDeploy
 
 ## 6. Walkthrough - Setup of AWS Agents
 
@@ -317,7 +320,12 @@ In Cloud Formation init section, see config step **04_setup_amazon-codedeploy-ag
 Refer template **autoscalinggroup.alb.cfn.yml**.<br/>
 In Cloud Formation init section, see **05_setup-amazon-cloudwatch-agent**.
 
-To enable CloudWatch watching CodeDeploy deployment and website logfiles, make sure to Configure file **/etc/awslogs/awscli.conf** :
+To enable CloudWatch watching :
+
+- CodeDeploy deployment logs (log group name **codedeploy-agent-deployments-logs**)
+- Website logs (log group name **website-application-logs**)
+
+Make sure to Configure file **/etc/awslogs/awscli.conf** :
 
 ```yml
 [/var/log/messages]
@@ -345,10 +353,7 @@ initial_position = start_of_file
 log_group_name = website-application-logs
 ```
 
-LogGroup name chosen for CodeDeploy is: **codedeploy-agent-deployments-logs**.
-LogGroup name chosen for the website is: **website-application-logs**.
-
-:information_source: Logs in AWS Cloudwatch Console
+:information_source: See logs in AWS Cloudwatch Console
 <details>
   <summary>Click to expand details</summary>
 
@@ -380,7 +385,7 @@ scripts/start_application.sh
 ```
 - It is made reachable on port 80 though the ALB url, as it relies on Apache httpd server which acts as reverse-proxy (refer section **4.2.1.**).
 
-- It has a user management feature and these users are stored in a DynamoDB table.
+- A page allows to manage users stored in a DynamoDB table.
 
 <details>
   <summary>Click to expand details</summary>

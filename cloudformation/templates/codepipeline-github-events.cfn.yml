@@ -3,6 +3,11 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Creation of a CodePipeline Configuration in AWS.
 
 Parameters:
+  ApplicationName:
+    Description: The Application name
+    Type: String
+    Default: 'DemoApplication'
+    ConstraintDescription: must be a valid name
   BranchName:
     Description: GitHub branch name
     Type: String
@@ -19,11 +24,6 @@ Parameters:
   GitHubOAuthToken:
     Type: String
     NoEcho: true
-  ApplicationName:
-    Description: The Application name
-    Type: String
-    Default: 'DemoApplication'
-    ConstraintDescription: must be a valid name
   DeploymentGroupName:
     Description: The Deployment Group Name
     Type: String
